@@ -56,6 +56,7 @@ export const SCENARIOS = {
   'challenge-analise':   { group: 'Challenge', title: 'Challenge (em análise)', fight: FIGHT, live: live(FIGHT), control: () => ctl('challenge', { side: 'away', status: 'challenge' }) },
   'challenge-won':       { group: 'Challenge', title: 'Challenge won', fight: FIGHT, live: live(FIGHT), control: () => ctl('challenge', { side: 'home', status: 'won' }) },
   'challenge-lost':      { group: 'Challenge', title: 'Challenge lost', fight: FIGHT, live: live(FIGHT), control: () => ctl('challenge', { side: 'home', status: 'lost' }) },
+  'challenge-canceled':  { group: 'Challenge', title: 'Challenge canceled', fight: FIGHT, live: live(FIGHT), control: () => ctl('challenge', { side: 'away', status: 'canceled' }) },
   'challenge-fluxo':     { group: 'Challenge', title: 'Fluxo completo (animação)', fight: FIGHT, live: live(FIGHT), control: {},
     steps: [
       [800, (s) => { s.control = ctl('challenge', { side: 'away', status: 'requested' }); }],

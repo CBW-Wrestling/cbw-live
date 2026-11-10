@@ -28,6 +28,8 @@ type Config struct {
 	WebhookToken        string
 	WebhookTokenEnforce bool
 	Resync              time.Duration
+	// TimingAddrs: PCs do UWW Timing para conexão direta (porta 9696), um por tapete.
+	TimingAddrs []string
 }
 
 func Load(path string) (*Config, error) {
@@ -77,6 +79,7 @@ func Load(path string) (*Config, error) {
 		WebhookToken:        get("WEBHOOK_TOKEN", ""),
 		WebhookTokenEnforce: get("WEBHOOK_TOKEN_ENFORCE", "false") == "true",
 		Resync:              time.Duration(resync) * time.Second,
+		TimingAddrs:         parseTimingAddrs(get("TIMING_ADDRS", "")),
 	}
 
 	var missing []string
@@ -92,4 +95,16 @@ func Load(path string) (*Config, error) {
 		return nil, fmt.Errorf("configuração incompleta, faltam: %s (rode ./scripts/setup-env.sh)", strings.Join(missing, ", "))
 	}
 	return c, nil
+}
+
+// parseTimingAddrs lê "192.168.0.11, 192.168.0.12:9696" → ["192.168.0.11:9696", "192.168.0.12:9696"].
+func parseTimingAddrs(v string) []string {
+	var out []string
+	for _, a := range strings.FieldsFunc(v, func(r rune) bool { return r == ',' || r == ' ' || r == ';' }) {
+		if !strings.Contains(a, ":") {
+			a += ":9696"
+		}
+		out = append(out, a)
+	}
+	return out
 }

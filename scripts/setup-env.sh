@@ -15,6 +15,7 @@ read -r -p "App ID (Settings → Apps): " cid
 read -r -s -p "App Secret: " csec; echo
 read -r -s -p "API Key do usuário de placar (Settings → Users): " akey; echo
 read -r -p "ID do evento (vazio = todos): " ev
+read -r -p "IPs dos PCs do UWW Timing, separados por vírgula (vazio = nenhum): " timing
 
 mkey="$(cd "$ARENA_DIR" && docker compose exec -T caddy sh -c 'printf %s "$MERCURE_PUBLISHER_JWT_KEY"')"
 [[ -n "$mkey" ]] || { echo "Não consegui ler a chave do Mercure no container caddy." >&2; exit 1; }
@@ -33,5 +34,6 @@ DATA_DIR=data
 WEBHOOK_TOKEN=$(openssl rand -hex 24)
 WEBHOOK_TOKEN_ENFORCE=false
 RESYNC_SECONDS=15
+TIMING_ADDRS=$timing
 EOF
 echo ".env criado (permissão 600)."

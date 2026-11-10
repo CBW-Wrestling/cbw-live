@@ -56,6 +56,9 @@ func victoryName(fight json.RawMessage, id string) string {
 // autoFromLive aplica as automações de uma mensagem ao vivo. Roda dentro de Store.Update.
 // Devolve true se algum controle mudou.
 func (s *Syncer) autoFromLive(m *MatState, lm liveMessage, now time.Time) bool {
+	if lm.Source == "timing" {
+		return false // eventos diretos do Timing (pre/rdy/wmh) já aplicaram os gráficos
+	}
 	changed := false
 	msg := lm.Message
 
@@ -113,6 +116,9 @@ func (s *Syncer) HandleEntity(ctx context.Context, entity, action, id string) {
 		return
 	}
 	ch := r.Challenge
+	if s.timingActiveForFight(ch.FightID) {
+		return // o Timing conectado direto já mostrou cada etapa do challenge
+	}
 	status := "challenge"
 	if ch.Status != nil {
 		status = map[bool]string{true: "won", false: "lost"}[*ch.Status]

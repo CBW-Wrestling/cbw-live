@@ -11,7 +11,7 @@ import (
 // esses estados (ainda não observados no Mercure), eles vêm da página de controle.
 var graphics = map[string]bool{
 	"intro":     true, // apresentação da luta (match ready)
-	"challenge": true, // challenge: requested | challenge | won | lost
+	"challenge": true, // challenge: requested | challenge | won | lost | canceled
 	"injury":    true, // atendimento: blood | injury, com cronômetro
 	"passivity": true, // período de atividade (30 s)
 	"victory":   true, // vencedor + tipo de vitória
@@ -37,6 +37,10 @@ type controlState struct {
 	UpdatedAt int64 `json:"updatedAt"`
 	// Auto: acionado pelos dados do Timing/Arena (não pelo operador).
 	Auto bool `json:"auto,omitempty"`
+	// Time: tempo exibido pelo próprio Timing (atendimento "3:58", passividade "23");
+	// quando presente, o overlay mostra esse valor em vez de contar sozinho.
+	Time   string `json:"time,omitempty"`
+	Paused bool   `json:"paused,omitempty"`
 }
 
 func (r ControlRequest) validate() error {

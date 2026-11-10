@@ -160,6 +160,19 @@ func run(envFile string) error {
 
 	go syncer.Run(ctx)
 	go syncer.SniffAll(ctx, allLog)
+
+	// conexão direta com cada UWW Timing (challenge em etapas, sangue, passividade, pausa…)
+	if len(cfg.TimingAddrs) > 0 {
+		timingLog, err := live.NewRecorder(cfg.DataDir, "timing-ws.jsonl")
+		if err != nil {
+			return err
+		}
+		defer timingLog.Close()
+		for _, addr := range cfg.TimingAddrs {
+			go syncer.RunTimingFeed(ctx, addr, timingLog)
+		}
+		slog.Info("UWW Timing direto", "pcs", cfg.TimingAddrs)
+	}
 	go func() {
 		<-ctx.Done()
 		shutdownCtx, cancel := context.WithTimeout(context.Background(), 3*time.Second)

@@ -17,8 +17,8 @@
 <h1>CBW Live — tapetes <a href="/settings.html" style="font-size:14px;margin-left:12px">⚙ configurações</a> <a href="/preview.html" style="font-size:14px;margin-left:12px">▦ galeria de estados</a></h1>
 <p class="muted">Use o link "overlay" como Browser Source no OBS/vMix (1920×1080, fundo transparente). Adicione <code>&amp;debug=1</code> para ver o payload bruto.</p>
 <table>
-  <thead><tr><th>Evento</th><th>Tapete</th><th>Lutas abertas</th><th>Placar UWW ao vivo</th><th>Atualizado</th><th></th></tr></thead>
-  <tbody id="rows"><tr><td colspan="6" class="muted">carregando…</td></tr></tbody>
+  <thead><tr><th>Evento</th><th>Tapete</th><th>Lutas abertas</th><th>UWW Timing direto</th><th>Placar UWW ao vivo</th><th>Atualizado</th><th></th></tr></thead>
+  <tbody id="rows"><tr><td colspan="7" class="muted">carregando…</td></tr></tbody>
 </table>
 <script>
 async function load() {
@@ -28,6 +28,7 @@ async function load() {
     const tr = document.createElement('tr');
     const url = `/overlay.html?event=${encodeURIComponent(m.eventId)}&mat=${encodeURIComponent(m.matName)}`;
     const cells = [m.eventName, m.matName, String(m.openFights),
+      m.timingAddr ? `● ${m.timingAddr}` : '—',
       m.liveAt ? new Date(m.liveAt).toLocaleTimeString() : '—',
       new Date(m.updatedAt).toLocaleTimeString()];
     for (const c of cells) { const td = document.createElement('td'); td.textContent = c; tr.append(td); }
@@ -36,7 +37,7 @@ async function load() {
     const c = document.createElement('a'); c.href = url.replace('/overlay.html', '/control.html'); c.textContent = 'controle'; c.target = '_blank';
     td.append(a, ' · ', c); tr.append(td);
     return tr;
-  }) : [Object.assign(document.createElement('tr'), { innerHTML: '<td colspan="6" class="muted">nenhum tapete ainda</td>' })]));
+  }) : [Object.assign(document.createElement('tr'), { innerHTML: '<td colspan="7" class="muted">nenhum tapete ainda</td>' })]));
 }
 load(); setInterval(load, 3000);
 </script>

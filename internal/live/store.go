@@ -34,6 +34,8 @@ type MatState struct {
 	LiveAt *time.Time      `json:"liveAt,omitempty"`
 	// ID da luta carregada no placar oficial (message.id da mensagem ao vivo).
 	LiveFightID string `json:"liveFightId,omitempty"`
+	// TimingAddr: PC do UWW Timing conectado direto a este tapete (vazio = só Mercure/Arena).
+	TimingAddr string `json:"timingAddr,omitempty"`
 
 	// Gráficos acionados pelo operador (intro, challenge, injury, passivity, victory).
 	Control map[string]json.RawMessage `json:"control"`
@@ -42,6 +44,8 @@ type MatState struct {
 	Seq       uint64    `json:"seq"`
 	// luta para a qual a apresentação automática já foi exibida (não reapresenta)
 	introFor string
+	// todas as lutas abertas do tapete (para identificar qual luta o Timing carregou)
+	openFights []json.RawMessage
 	// Relógio do servidor (ms) no momento do envio — os overlays usam para
 	// sincronizar cronômetros de atendimento/passividade sem depender do relógio da máquina.
 	ServerTime int64 `json:"serverTime"`

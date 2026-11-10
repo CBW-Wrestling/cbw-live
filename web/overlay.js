@@ -178,7 +178,7 @@ function render() {
 }
 
 // Painel lateral: challenge tem prioridade de exibição sobre vitória no mesmo lado.
-const CHALLENGE_TEXT = { requested: 'Challenge requested', challenge: 'Challenge', won: 'Challenge won', lost: 'Challenge lost' };
+const CHALLENGE_TEXT = { requested: 'Challenge requested', challenge: 'Challenge', won: 'Challenge won', lost: 'Challenge lost', canceled: 'Challenge canceled' };
 
 function renderPanels(m, ctl) {
   const bug = $('bug');
@@ -219,16 +219,18 @@ function renderSideBoxes(m, ctl) {
     let cls = '', text = '';
     const inj = ctl.injury?.side === side ? ctl.injury : null;
     const pas = ctl.passivity?.side === side ? ctl.passivity : null;
+    // Com o Timing conectado direto, o tempo vem dele (ctl.time) e respeita a pausa;
+    // acionado pelo operador, o overlay conta a partir do início.
     if (inj) {
       const total = inj.durationSec || Number(fight.injuryTime) || 240;
-      const left = Math.max(0, total - Math.floor((serverNow() - inj.startedAt) / 1000));
-      cls = `on injury ${inj.kind === 'blood' ? 'blood' : ''} ${left <= 30 ? 'urgent' : ''}`;
-      text = fmt(left);
+      const left = inj.time ? (parseTime(inj.time) ?? 0) : Math.max(0, total - Math.floor((serverNow() - inj.startedAt) / 1000));
+      cls = `on injury ${inj.kind === 'blood' ? 'blood' : ''} ${inj.paused ? 'paused' : left <= 30 ? 'urgent' : ''}`;
+      text = inj.time || fmt(left);
     } else if (pas) {
       const total = pas.durationSec || Number(fight.activityTime) || 30;
-      const left = Math.max(0, total - Math.floor((serverNow() - pas.startedAt) / 1000));
-      cls = `on ${left <= 5 ? 'urgent' : ''}`;
-      text = String(left).padStart(2, '0');
+      const left = pas.time ? (parseTime(pas.time) ?? 0) : Math.max(0, total - Math.floor((serverNow() - pas.startedAt) / 1000));
+      cls = `on ${pas.paused ? 'paused' : left <= 5 ? 'urgent' : ''}`;
+      text = String(Math.floor(left)).padStart(2, '0');
     }
     const want = `side-box ${cls}`.trim();
     if (box.className !== want) box.className = want;
@@ -278,7 +280,10 @@ function isCollapsed(m, ctl) {
   if (!m.running || m.secs === null) return false;
   if (m.full && m.secs >= m.full) return false; // ainda não começou
   const now = performance.now();
-  if (now - state.liveAt > PAUSE_MS) return false; // parado
+  // Timing conectado direto informa a pausa (clockRunning); senão, estimamos pela falta de mensagens.
+  const clockRunning = state.live?.clockRunning;
+  if (clockRunning === false) return false; // parado
+  if (clockRunning === undefined && now - state.liveAt > PAUSE_MS) return false; // parado (estimado)
   if (now - state.scoreAt < state.settings.afterScoreSeconds * 1000) return false; // acabou de pontuar
   return true;
 }

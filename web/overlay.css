@@ -94,6 +94,8 @@ img.flag[src=""], img.flag:not([src]) { visibility: hidden; }
 /* gota desenhada em CSS (emoji não renderiza no OBS do Windows) */
 .side-box.blood::before { content: ""; width: 12px; height: 12px; background: #fff; border-radius: 0 50% 50% 50%; transform: rotate(45deg); }
 .side-box.urgent { animation: blink 1s steps(2, start) infinite; }
+/* cronômetro pausado no Timing */
+.side-box.paused { opacity: .7; }
 
 /* Painel lateral (challenge / vencedor) — desliza para fora a partir do placar */
 .panel {
@@ -116,6 +118,7 @@ img.flag[src=""], img.flag:not([src]) { visibility: hidden; }
 .panel.st-requested .p-status { font-size: 16px; letter-spacing: .08em; }
 .panel.st-won .p-status { color: #138a3e; }
 .panel.st-lost .p-status { color: var(--injury); }
+.panel.st-canceled .p-status { color: #6b7280; }
 .panel.victory .panel-in { background: linear-gradient(90deg, var(--gold) 0%, var(--gold) 78%, rgba(217,180,90,0) 100%); }
 .panel.victory .p-status { color: var(--ink); }
 

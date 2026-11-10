@@ -30,9 +30,12 @@ type Syncer struct {
 	Settings *SettingsStore
 
 	trigger chan struct{}
-	mu      sync.Mutex
-	mats    map[string]arena.Mat // key -> mat
-	subs    map[string]context.CancelFunc
+	// tapetes com o UWW Timing conectado direto (contagem por tapete)
+	tmu        sync.Mutex
+	timingKeys map[string]int
+	mu         sync.Mutex
+	mats       map[string]arena.Mat // key -> mat
+	subs       map[string]context.CancelFunc
 }
 
 type message struct {
@@ -44,9 +47,10 @@ type message struct {
 func NewSyncer(a *arena.Client, hub *mercure.Hub, store *Store, eventID string, resync time.Duration, liveLog *Recorder) *Syncer {
 	return &Syncer{
 		Arena: a, Hub: hub, Store: store, EventID: eventID, Resync: resync, LiveLog: liveLog,
-		trigger: make(chan struct{}, 1),
-		mats:    map[string]arena.Mat{},
-		subs:    map[string]context.CancelFunc{},
+		trigger:    make(chan struct{}, 1),
+		timingKeys: map[string]int{},
+		mats:       map[string]arena.Mat{},
+		subs:       map[string]context.CancelFunc{},
 	}
 }
 
@@ -147,7 +151,7 @@ func (s *Syncer) refreshMat(ctx context.Context, ev arena.SportEvent, mat arena.
 		m.EventID, m.EventName, m.EventCity, m.MatID, m.MatName = ev.ID, ev.Name, ev.AddressLocality, mat.ID, mat.Name
 		m.Colors = Colors{ev.Athlete1Color, ev.Athlete1TextColor, ev.Athlete2Color, ev.Athlete2TextColor}
 		fightChanged := !bytes.Equal(m.Fight, fight) || m.OpenFights != len(fights)
-		m.Fight, m.OpenFights = fight, len(fights)
+		m.Fight, m.OpenFights, m.openFights = fight, len(fights), fights
 		return meta || fightChanged
 	})
 	if changed {
@@ -182,7 +186,10 @@ func pickFight(fights []json.RawMessage, liveFightID string) json.RawMessage {
 //
 // winner chega primeiro com victory vazio; o tipo vem quando a mesa confirma.
 type liveMessage struct {
-	State   string `json:"state"` // "starting" (luta carregada) | "running"
+	State string `json:"state"` // "starting" (luta carregada) | "running"
+	// Source: "timing" quando montada pelo cbw-live a partir do WebSocket do Timing
+	// (aí apresentação/vitória já são tratadas pelo timingFeed).
+	Source  string `json:"source"`
 	Message struct {
 		ID     string                `json:"id"`
 		Idle   bool                  `json:"idle"`
@@ -217,28 +224,39 @@ func (s *Syncer) ensureLiveSub(ctx context.Context, eventID string, mat arena.Ma
 			b, _ := json.Marshal(string(e.Data))
 			data = b
 		}
-		var lm liveMessage
-		json.Unmarshal(data, &lm)
-		fightChanged := false
-		state, _ := s.Store.Update(key, func(m *MatState) bool {
-			m.Live, m.LiveAt = data, &now
-			if lm.Message.ID != "" && lm.Message.ID != m.LiveFightID {
-				// nova luta carregada: gráficos da luta anterior (challenge, vitória…) saem
-				m.LiveFightID, fightChanged = lm.Message.ID, m.LiveFightID != ""
-				clearGraphics(m)
-			}
-			if s.autoFromLive(m, lm, now) {
-				fightChanged = true // força publicar os controles
-			}
-			return true
-		})
-		s.publish(subCtx, eventID, mat.Name, message{Type: "live", Live: data})
-		if fightChanged {
-			s.publish(subCtx, eventID, mat.Name, message{Type: "control", State: &state})
-			// atualiza o snapshot (atletas, categoria, cores)
-			s.Trigger()
+		// com o Timing conectado direto (fonte mais completa), o Mercure vira reserva
+		if s.timingActive(key) {
+			return
 		}
+		s.ingestLive(subCtx, eventID, mat.Name, data, now)
 	})
+}
+
+// ingestLive aplica uma mensagem ao vivo no formato do Timing/Mercure — vinda do
+// tópico Mercure ou montada a partir do WebSocket do Timing — e publica.
+func (s *Syncer) ingestLive(ctx context.Context, eventID, matName string, data json.RawMessage, now time.Time) {
+	key := Key(eventID, matName)
+	var lm liveMessage
+	json.Unmarshal(data, &lm)
+	fightChanged := false
+	state, _ := s.Store.Update(key, func(m *MatState) bool {
+		m.Live, m.LiveAt = data, &now
+		if lm.Message.ID != "" && lm.Message.ID != m.LiveFightID {
+			// nova luta carregada: gráficos da luta anterior (challenge, vitória…) saem
+			m.LiveFightID, fightChanged = lm.Message.ID, m.LiveFightID != ""
+			clearGraphics(m)
+		}
+		if s.autoFromLive(m, lm, now) {
+			fightChanged = true // força publicar os controles
+		}
+		return true
+	})
+	s.publish(ctx, eventID, matName, message{Type: "live", Live: data})
+	if fightChanged {
+		s.publish(ctx, eventID, matName, message{Type: "control", State: &state})
+		// atualiza o snapshot (atletas, categoria, cores)
+		s.Trigger()
+	}
 }
 
 func (s *Syncer) publish(ctx context.Context, eventID, matName string, msg message) {

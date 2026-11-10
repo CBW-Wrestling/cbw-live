@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>CBW Live — Tapetes</title>
+<style>
+  body { font: 15px/1.4 system-ui, sans-serif; margin: 24px; background: #111; color: #eee; }
+  h1 { font-size: 20px; }
+  table { border-collapse: collapse; width: 100%; max-width: 960px; }
+  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #333; }
+  a { color: #4fd1c5; }
+  .muted { color: #888; }
+</style>
+</head>
+<body>
+<h1>CBW Live — tapetes <a href="/settings.html" style="font-size:14px;margin-left:12px">⚙ configurações</a> <a href="/preview.html" style="font-size:14px;margin-left:12px">▦ galeria de estados</a></h1>
+<p class="muted">Use o link "overlay" como Browser Source no OBS/vMix (1920×1080, fundo transparente). Adicione <code>&amp;debug=1</code> para ver o payload bruto.</p>
+<table>
+  <thead><tr><th>Evento</th><th>Tapete</th><th>Lutas abertas</th><th>Placar UWW ao vivo</th><th>Atualizado</th><th></th></tr></thead>
+  <tbody id="rows"><tr><td colspan="6" class="muted">carregando…</td></tr></tbody>
+</table>
+<script>
+async function load() {
+  const mats = await fetch('/api/state').then(r => r.json());
+  const rows = document.getElementById('rows');
+  rows.replaceChildren(...(mats.length ? mats.map(m => {
+    const tr = document.createElement('tr');
+    const url = `/overlay.html?event=${encodeURIComponent(m.eventId)}&mat=${encodeURIComponent(m.matName)}`;
+    const cells = [m.eventName, m.matName, String(m.openFights),
+      m.liveAt ? new Date(m.liveAt).toLocaleTimeString() : '—',
+      new Date(m.updatedAt).toLocaleTimeString()];
+    for (const c of cells) { const td = document.createElement('td'); td.textContent = c; tr.append(td); }
+    const td = document.createElement('td');
+    const a = document.createElement('a'); a.href = url; a.textContent = 'overlay'; a.target = '_blank';
+    const c = document.createElement('a'); c.href = url.replace('/overlay.html', '/control.html'); c.textContent = 'controle'; c.target = '_blank';
+    td.append(a, ' · ', c); tr.append(td);
+    return tr;
+  }) : [Object.assign(document.createElement('tr'), { innerHTML: '<td colspan="6" class="muted">nenhum tapete ainda</td>' })]));
+}
+load(); setInterval(load, 3000);
+</script>
+</body>
+</html>

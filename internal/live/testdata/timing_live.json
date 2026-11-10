@@ -1,0 +1,102 @@
+[
+ {
+  "sportEventId": "1f1dc89e-e944-67e0-b4bc-4d7c3dcfa26c",
+  "state": "starting",
+  "matName": "A",
+  "message": {
+   "id": "1f1dc8a1-0f52-6d40-a0e3-43affd002e60",
+   "idle": false,
+   "weightCategory": "Seniors FS 57",
+   "round": "Qualif.",
+   "matchNo": 1,
+   "time": "6:00",
+   "home": {
+    "code": "1f1dc8a0-44f6-6e98-a58a-c59807e08cd0",
+    "country": "IRI",
+    "name": "RAHIMI H.",
+    "score": 0,
+    "cautions": 0,
+    "active": true
+   },
+   "away": {
+    "code": "1f1dc8a0-4639-61ca-9ed8-c59807e08cd0",
+    "country": "RUS",
+    "name": "LEBEDEV V.",
+    "score": 0,
+    "cautions": 0,
+    "active": true
+   },
+   "advantage": "away"
+  }
+ },
+ {
+  "sportEventId": "1f1dc89e-e944-67e0-b4bc-4d7c3dcfa26c",
+  "state": "running",
+  "matName": "A",
+  "message": {
+   "id": "1f1dc8a1-0f52-6d40-a0e3-43affd002e60",
+   "idle": false,
+   "weightCategory": "Seniors FS 57",
+   "round": "Qualif.",
+   "matchNo": 1,
+   "time": "5:33",
+   "home": {
+    "code": "1f1dc8a0-44f6-6e98-a58a-c59807e08cd0",
+    "country": "IRI",
+    "name": "RAHIMI H.",
+    "score": 5,
+    "cautions": 0,
+    "active": true
+   },
+   "away": {
+    "code": "1f1dc8a0-4639-61ca-9ed8-c59807e08cd0",
+    "country": "RUS",
+    "name": "LEBEDEV V.",
+    "score": 3,
+    "cautions": 2,
+    "active": true
+   },
+   "advantage": "",
+   "detail": {
+    "winner": "1f1dc8a0-44f6-6e98-a58a-c59807e08cd0",
+    "victory": "",
+    "victoryTime": "00:26"
+   }
+  }
+ },
+ {
+  "sportEventId": "1f1dc89e-e944-67e0-b4bc-4d7c3dcfa26c",
+  "state": "running",
+  "matName": "A",
+  "message": {
+   "id": "1f1dc8a1-0f52-6d40-a0e3-43affd002e60",
+   "idle": false,
+   "weightCategory": "Seniors FS 57",
+   "round": "Qualif.",
+   "matchNo": 1,
+   "time": "5:33",
+   "home": {
+    "code": "1f1dc8a0-44f6-6e98-a58a-c59807e08cd0",
+    "country": "IRI",
+    "name": "RAHIMI H.",
+    "score": 5,
+    "cautions": 0,
+    "active": true
+   },
+   "away": {
+    "code": "1f1dc8a0-4639-61ca-9ed8-c59807e08cd0",
+    "country": "RUS",
+    "name": "LEBEDEV V.",
+    "score": 3,
+    "cautions": 0,
+    "active": true
+   },
+   "advantage": "",
+   "detail": {
+    "winner": "1f1dc8a0-44f6-6e98-a58a-c59807e08cd0",
+    "victory": "VFA",
+    "victoryTime": "00:26"
+   }
+  }
+ }
+]

@@ -1,0 +1,11 @@
+# credenciais e chaves (gerado por scripts/setup-env.sh)
+.env
+
+# dados de execução: logs de descoberta e configurações salvas
+data/
+
+# binários
+bin/
+
+# sistema
+.DS_Store

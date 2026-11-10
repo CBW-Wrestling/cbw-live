@@ -1,0 +1,226 @@
+/* Overlay CBW — 1920×1080, fundo transparente (Browser Source OBS/vMix).
+   Animações apenas com transform / opacity / clip-path para rodar na GPU. */
+:root {
+  --c-home: #c8102e;
+  --c-away: #2f8fd8;
+  --ink: #0b0f1a;
+  --paper: #ffffff;
+  --navy: #0d1630;
+  --navy-2: #16234a;
+  --gold: #d9b45a;
+  --challenge: #2f6fd8;
+  --injury: #d0021b;
+  --card: #ffcc00;
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-in: cubic-bezier(.6, 0, .8, .2);
+  font-family: "Roboto Condensed", "Arial Narrow", "Helvetica Neue", Arial, sans-serif;
+}
+html, body { margin: 0; background: transparent; overflow: hidden; }
+body { width: 1920px; height: 1080px; position: relative; transform-origin: 0 0; }
+img.flag { display: block; object-fit: cover; background: #ccc; }
+img.flag[src=""], img.flag:not([src]) { visibility: hidden; }
+
+/* ================= PLACAR ================= */
+.bug {
+  position: absolute; left: 60px; top: 46px;
+  display: grid; grid-template-columns: auto; row-gap: 3px;
+  transform-origin: left top;
+}
+.bug.out { transform: translateX(-30px); opacity: 0; transition-timing-function: var(--ease-in); }
+
+/* cabeçalho: logo CBW alinhada à coluna das bandeiras + aba com a fase */
+.phase { display: flex; align-items: flex-end; justify-self: start; }
+/* a logo fica um pouco acima da linha do placar, para respirar em relação às bandeiras */
+.phase .logo {
+  width: 52px; height: 52px; display: block; margin: 0 2px 10px 2px;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45));
+}
+.phase span {
+  padding: 4px 18px 5px; background: rgba(5, 8, 16, .88); color: var(--gold);
+  font-size: 22px; font-weight: 600; letter-spacing: .02em;
+}
+.phase:not(:has(img)) span { margin-left: 56px; }
+.phase span:empty { display: none; }
+.phase:not(:has(img)):has(span:empty) { display: none; }
+
+/* colunas: bandeira | nome | cartões+país | faixa de cor | placar | caixa lateral
+   --w-who é registrada com @property para a largura animar entre expandido e recolhido. */
+@property --w-who { syntax: "<length>"; inherits: true; initial-value: 330px; }
+.bug { --w-who: 330px; --w-country: 96px; --w-bar: 8px; --w-score: 72px; }
+.bug { transition: transform 450ms var(--ease-out), opacity 300ms ease, --w-who 450ms var(--ease-out); }
+.bug.collapsed { --w-who: 0px; }
+.row {
+  position: relative; display: grid; align-items: stretch; height: 46px;
+  grid-template-columns: 56px var(--w-who) var(--w-country) var(--w-bar) var(--w-score) auto;
+}
+.row .who { display: flex; align-items: center; min-width: 0; overflow: hidden; background: var(--paper); }
+.row .flag { width: 38px; height: 38px; align-self: center; justify-self: center; border-radius: 50%; box-shadow: 0 0 0 2px rgba(255,255,255,.9); }
+.row .name {
+  flex: 1 1 auto; min-width: 0; padding-left: 12px; color: var(--ink);
+  font-size: 26px; font-weight: 700; text-transform: uppercase; white-space: nowrap; overflow: hidden; text-overflow: clip;
+  transition: opacity 200ms ease;
+}
+.bug.collapsed .row .name { opacity: 0; }
+.row .country {
+  display: flex; align-items: center; justify-content: flex-end; gap: 8px; padding: 0 10px;
+  background: var(--paper); color: var(--ink); font-size: 22px; font-weight: 700;
+}
+.row .cards { display: flex; gap: 4px; }
+.row .cards i { width: 11px; height: 16px; background: var(--card); border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.25); transform: scale(0); animation: pop 300ms var(--ease-out) forwards; }
+.row .bar { background: var(--c-home); }
+.row.away .bar { background: var(--c-away); }
+.row .score {
+  position: relative; display: grid; place-items: center; overflow: hidden;
+  background: linear-gradient(180deg, #2a2f3d 0%, #07090f 70%); color: #fff;
+  font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.row.home .score { background: linear-gradient(180deg, #1b1f2b 0%, #3a0a12 100%); }
+.row.away .score { background: linear-gradient(180deg, #1b1f2b 0%, #0a2238 100%); }
+.row .score b { display: block; }
+.row .score b.bump { animation: bump 500ms var(--ease-out); }
+/* Critério: quem pontuou por último quando empatado (message.advantage) */
+.row .score::after { content: ""; position: absolute; inset: 3px; border: 3px solid #fff; opacity: 0; transform: scale(.85); transition: opacity 200ms ease, transform 250ms var(--ease-out); }
+.row.adv .score::after { opacity: 1; transform: scale(1); }
+
+/* Caixa lateral: passividade (contagem) ou atendimento (cruz + tempo) */
+.side-box {
+  display: grid; place-items: center; min-width: 0; margin-left: 6px; padding: 0;
+  background: var(--paper); color: var(--ink); font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums;
+  clip-path: inset(0 100% 0 0); transition: clip-path 300ms var(--ease-out);
+}
+.side-box.on { clip-path: inset(0 0 0 0); min-width: 58px; padding: 0 8px; }
+.side-box.injury { background: var(--injury); color: #fff; gap: 6px; grid-auto-flow: column; }
+.side-box.injury::before { content: "✚"; font-size: 18px; }
+/* gota desenhada em CSS (emoji não renderiza no OBS do Windows) */
+.side-box.blood::before { content: ""; width: 12px; height: 12px; background: #fff; border-radius: 0 50% 50% 50%; transform: rotate(45deg); }
+.side-box.urgent { animation: blink 1s steps(2, start) infinite; }
+
+/* Painel lateral (challenge / vencedor) — desliza para fora a partir do placar */
+.panel {
+  position: absolute; top: 0; height: 100%; margin-left: 12px; overflow: hidden; pointer-events: none;
+  left: calc(56px + var(--w-who) + var(--w-country) + var(--w-bar) + var(--w-score));
+  transition: margin-left 300ms var(--ease-out);
+}
+/* se a caixa lateral (passividade/atendimento) estiver no ar na mesma linha, o painel abre depois dela */
+.row:has(.side-box.on) .panel { margin-left: 92px; }
+.panel-in {
+  height: 100%; display: flex; align-items: center; gap: 14px; padding: 0 70px 0 16px;
+  background: linear-gradient(90deg, #fff 0%, #fff 78%, rgba(255,255,255,0) 100%);
+  transform: translateX(-102%); transition: transform 450ms var(--ease-out);
+  white-space: nowrap;
+}
+.panel.on .panel-in { transform: translateX(0); }
+.panel .p-name { font-size: 22px; font-weight: 700; color: var(--ink); text-transform: uppercase; }
+.panel .p-status { font-size: 24px; font-weight: 800; color: var(--challenge); text-transform: uppercase; letter-spacing: .02em; }
+.panel .p-status.swap { animation: swap 380ms var(--ease-out); }
+.panel.st-requested .p-status { font-size: 16px; letter-spacing: .08em; }
+.panel.st-won .p-status { color: #138a3e; }
+.panel.st-lost .p-status { color: var(--injury); }
+.panel.victory .panel-in { background: linear-gradient(90deg, var(--gold) 0%, var(--gold) 78%, rgba(217,180,90,0) 100%); }
+.panel.victory .p-status { color: var(--ink); }
+
+/* Vitória: destaca o vencedor, atenua o perdedor */
+.bug.has-winner .row { transition: filter 400ms ease; }
+/* perdedor esmaecido sem transparência (sobre vídeo, transparência fica "lavada") */
+.bug.has-winner .row.loser { filter: grayscale(.85) brightness(.75); }
+.bug.has-winner .row.winner .who { box-shadow: inset 0 -5px 0 var(--gold); }
+
+.foot {
+  display: flex; align-items: center; gap: 18px;
+  margin-left: 56px; height: 44px; padding-left: 14px;
+  background: rgba(5, 8, 16, .88); color: #fff; font-size: 22px; font-weight: 600;
+  width: calc(var(--w-who) + var(--w-country) + var(--w-bar) + var(--w-score));
+  box-sizing: border-box;
+}
+.foot #category { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: clip; transition: opacity 200ms ease; }
+.foot #period { white-space: nowrap; transition: opacity 200ms ease; }
+/* recolhido: só o relógio, alinhado sob o placar (categoria e período saem) */
+.bug.collapsed .foot #category, .bug.collapsed .foot #period { opacity: 0; }
+.foot { transition: background-color 300ms ease; }
+.bug.collapsed .foot { background-color: transparent; justify-content: flex-end; }
+.bug.collapsed .foot #period { display: none; }
+.foot #period:empty { display: none; }
+.clock {
+  align-self: stretch; display: grid; place-items: center; min-width: 96px;
+  background: var(--paper); color: var(--ink); font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums;
+}
+.clock.final { color: var(--injury); }
+.clock.final.tick { animation: bump 450ms var(--ease-out); }
+
+/* ================= APRESENTAÇÃO DA LUTA ================= */
+.intro {
+  position: absolute; left: 50%; bottom: 88px; width: 980px; margin-left: -490px;
+  display: grid; justify-items: center; row-gap: 0;
+}
+.intro-rows {
+  width: 560px; padding: 10px 26px; background: rgba(5, 8, 16, .9);
+  clip-path: inset(100% 0 0 0); transition: clip-path 450ms var(--ease-out) 150ms;
+}
+.intro-row { display: grid; grid-template-columns: 44px 70px 1fr; align-items: center; height: 40px; color: #fff; }
+.intro-row .flag { width: 32px; height: 32px; border-radius: 50%; }
+.intro-row .country { font-size: 24px; font-weight: 700; }
+.intro-row.home .country { color: #ff6b7d; }
+.intro-row.away .country { color: #6cb8ff; }
+.intro-row .name { font-size: 28px; font-weight: 700; text-transform: uppercase; letter-spacing: .02em; }
+.intro-band {
+  width: 100%; padding: 10px 0 12px; text-align: center; color: #fff; font-size: 30px; font-weight: 700; white-space: pre;
+  background: linear-gradient(90deg, rgba(13,22,48,0) 0%, var(--navy-2) 14%, var(--navy-2) 86%, rgba(13,22,48,0) 100%);
+  transform: scaleX(0); transition: transform 450ms var(--ease-out);
+}
+/* "Início em 17:50" (só quando o horário previsto está na próxima hora) */
+.intro-start {
+  padding: 4px 22px 6px; color: #fff; font-size: 24px; font-weight: 700;
+  background: rgba(5, 8, 16, .9); font-variant-numeric: tabular-nums;
+  opacity: 0; transform: translateY(12px); transition: opacity 300ms ease 300ms, transform 400ms var(--ease-out) 300ms;
+}
+.intro-start:empty { display: none; }
+/* evento · cidade, numa aba pequena abaixo da faixa principal */
+.intro-event {
+  display: flex; gap: 0; font-size: 18px; font-weight: 700; letter-spacing: .03em;
+  clip-path: inset(0 0 100% 0); transition: clip-path 400ms var(--ease-out) 350ms;
+}
+.intro-event span { padding: 5px 16px 6px; }
+.intro-event #ie-name { background: var(--navy); color: #fff; text-transform: uppercase; }
+.intro-event #ie-city { background: var(--navy-2); color: var(--gold); }
+.intro-event span:empty { display: none; }
+
+.intro:not(.out) .intro-rows { clip-path: inset(0 0 0 0); }
+.intro:not(.out) .intro-band { transform: scaleX(1); }
+.intro:not(.out) .intro-start { opacity: 1; transform: none; }
+.intro:not(.out) .intro-event { clip-path: inset(0 0 0 0); }
+.intro.out .intro-rows { transition-delay: 0ms; transition-timing-function: var(--ease-in); }
+.intro.out .intro-band { transition-delay: 200ms; transition-timing-function: var(--ease-in); }
+.intro.out .intro-start, .intro.out .intro-event { transition-delay: 0ms; }
+
+/* ================= Animações ================= */
+@keyframes bump { 0% { transform: scale(1); } 35% { transform: scale(1.35); } 100% { transform: scale(1); } }
+@keyframes pop { to { transform: scale(1); } }
+@keyframes swap { 0% { opacity: 0; transform: translateY(40%); } 100% { opacity: 1; transform: translateY(0); } }
+@keyframes blink { to { opacity: .35; } }
+
+.debug {
+  position: absolute; right: 16px; top: 16px; width: 640px; max-height: 1040px; overflow: auto;
+  margin: 0; padding: 12px; font: 12px/1.35 ui-monospace, monospace;
+  background: rgba(0,0,0,.85); color: #9fefb0; white-space: pre-wrap;
+}
+
+/* ================= CHROMA KEY =================
+   Fundo de chroma (configurações → Fundo do overlay, ou ?bg=green|blue|transparent).
+   Tudo que era semitransparente fica sólido e sem sombra: no chroma, qualquer
+   mistura com o fundo vira franja verde/azul depois do recorte. */
+body.chroma-green { background: #00ff00; }
+body.chroma-blue { background: #0000ff; }
+body[class*="chroma-"] .phase span,
+body[class*="chroma-"] .foot,
+body[class*="chroma-"] .intro-rows { background: #05080f; }
+body[class*="chroma-"] .bug.collapsed .foot { background: transparent; }
+body[class*="chroma-"] .phase .logo { filter: none; }
+body[class*="chroma-"] .row .flag { box-shadow: 0 0 0 2px #fff; }
+/* degradês que terminavam em transparente passam a terminar sólidos */
+body[class*="chroma-"] .panel-in { background: #fff; padding-right: 24px; }
+body[class*="chroma-"] .panel.victory .panel-in { background: var(--gold); }
+body[class*="chroma-"] .intro-band { background: var(--navy-2); width: 100%; }
+/* perdedor esmaecido sem filtro (o filtro não mistura com o fundo, mas mantemos tons sólidos) */
+body[class*="chroma-"] .bug.has-winner .row.loser { filter: grayscale(.85) brightness(.75); }
+/* verde do "Challenge won" mais escuro, longe do verde de chroma */
+body.chroma-green .panel.st-won .p-status { color: #0b5d2a; }

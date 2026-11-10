@@ -175,12 +175,19 @@ Salvas em `data/settings.json` e aplicadas na hora em todos os overlays abertos,
 
 | Opção | Valores | Padrão |
 |---|---|---|
+| Modelo do placar | Clássico CBW · Faixa azul · Pilha ciano · Bloco duplo · Liga roxo · Faixa verde · Arena · Cartela clara · Duelo · Escuro duplo · Barra dupla · Tabuleiro · UWW oficial | Clássico CBW |
+| Posição do placar | topo ou base × início, centro ou fim (6 posições) | topo · início |
+| Modelo da apresentação | Tarja inferior · Versus · Cartão central · Barra no topo · Arena · Cartela clara · Tela dividida · Faixa fina · UWW oficial | Tarja inferior |
+| Posição da apresentação | padrão do modelo ou uma das 6 posições | padrão do modelo |
+| Animação de entrada e saída | Do modelo · Suave · Deslizar · Da borda · Zoom · Revelar | Do modelo |
 | Modo recolhido | Automático · Nunca recolher · Sempre recolhido | Automático |
 | Expandir após um ponto | 0–60 s (só no automático) | 6 s |
 | Fundo do overlay | Transparente · Verde chroma (#00FF00) · Azul chroma (#0000FF) | Transparente |
 | Apresentação automática ao carregar a luta | liga/desliga | ligado |
 | Mostrar nome do evento e cidade | liga/desliga | ligado |
 | Mostrar "Início em" | liga/desliga (usa o horário previsto do Arena; confira o fuso do evento) | desligado |
+
+Cada modelo tem uma pré-visualização real (o próprio overlay, com dados fictícios) na tela de configurações. Também dá para forçar uma combinação só num overlay pela URL, sem mexer nas configurações: `&board=arena&pos=bottom-end&introstyle=split&ipos=top-start&anim=wipe` (`board`: `classic`, `broadcast`, `stack`, `compact`, `league`, `futy`, `arena`, `clean`, `duel`, `flo`, `dual`, `judo`, `uww`; `pos`/`ipos`: `top|bottom-start|center|end`). Os modelos ficam em `web/themes.js` (marcação) e `web/themes.css` (estilo); para criar um novo, adicione-o nos dois e na lista de `internal/live/settings.go`. Depois de alterar arquivos em `web/`, recompile: eles vão embutidos no executável.
 
 **Modo automático do placar:** expandido antes da luta, nas paradas, logo após um ponto e com challenge/atendimento/vitória no ar; recolhido enquanto o cronômetro corre. Com o Timing conectado direto, a pausa é a real (start/stop da mesa); sem ele (só Mercure), o cbw-live considera a luta parada depois de ~2,6 s sem mensagem.
 

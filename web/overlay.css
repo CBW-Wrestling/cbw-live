@@ -29,19 +29,19 @@ img.flag[src=""], img.flag:not([src]) { visibility: hidden; }
 .bug.out { transform: translateX(-30px); opacity: 0; transition-timing-function: var(--ease-in); }
 
 /* cabeçalho: logo CBW alinhada à coluna das bandeiras + aba com a fase */
-.phase { display: flex; align-items: flex-end; justify-self: start; }
+.bug .phase { display: flex; align-items: flex-end; justify-self: start; }
 /* a logo fica um pouco acima da linha do placar, para respirar em relação às bandeiras */
-.phase .logo {
+.bug .phase .logo {
   width: 52px; height: 52px; display: block; margin: 0 2px 10px 2px;
   filter: drop-shadow(0 2px 4px rgba(0, 0, 0, .45));
 }
-.phase span {
+.bug .phase span {
   padding: 4px 18px 5px; background: rgba(5, 8, 16, .88); color: var(--gold);
   font-size: 22px; font-weight: 600; letter-spacing: .02em;
 }
-.phase:not(:has(img)) span { margin-left: 56px; }
-.phase span:empty { display: none; }
-.phase:not(:has(img)):has(span:empty) { display: none; }
+.bug .phase:not(:has(img)) span { margin-left: 56px; }
+.bug .phase span:empty { display: none; }
+.bug .phase:not(:has(img)):has(span:empty) { display: none; }
 
 /* colunas: bandeira | nome | cartões+país | faixa de cor | placar | caixa lateral
    --w-who é registrada com @property para a largura animar entre expandido e recolhido. */
@@ -69,58 +69,58 @@ img.flag[src=""], img.flag:not([src]) { visibility: hidden; }
 .row .cards i { width: 11px; height: 16px; background: var(--card); border-radius: 2px; box-shadow: 0 0 0 1px rgba(0,0,0,.25); transform: scale(0); animation: pop 300ms var(--ease-out) forwards; }
 .row .bar { background: var(--c-home); }
 .row.away .bar { background: var(--c-away); }
-.row .score {
+.bug .row .score {
   position: relative; display: grid; place-items: center; overflow: hidden;
   background: linear-gradient(180deg, #2a2f3d 0%, #07090f 70%); color: #fff;
   font-size: 34px; font-weight: 800; font-variant-numeric: tabular-nums;
 }
 .row.home .score { background: linear-gradient(180deg, #1b1f2b 0%, #3a0a12 100%); }
 .row.away .score { background: linear-gradient(180deg, #1b1f2b 0%, #0a2238 100%); }
-.row .score b { display: block; }
-.row .score b.bump { animation: bump 500ms var(--ease-out); }
+.bug .row .score b { display: block; }
+.bug .row .score b.bump { animation: bump 500ms var(--ease-out); }
 /* Critério: quem pontuou por último quando empatado (message.advantage) */
-.row .score::after { content: ""; position: absolute; inset: 3px; border: 3px solid #fff; opacity: 0; transform: scale(.85); transition: opacity 200ms ease, transform 250ms var(--ease-out); }
+.bug .row .score::after { content: ""; position: absolute; inset: 3px; border: 3px solid #fff; opacity: 0; transform: scale(.85); transition: opacity 200ms ease, transform 250ms var(--ease-out); }
 .row.adv .score::after { opacity: 1; transform: scale(1); }
 
 /* Caixa lateral: passividade (contagem) ou atendimento (cruz + tempo) */
-.side-box {
+.bug .side-box {
   display: grid; place-items: center; min-width: 0; margin-left: 6px; padding: 0;
   background: var(--paper); color: var(--ink); font-size: 26px; font-weight: 800; font-variant-numeric: tabular-nums;
   clip-path: inset(0 100% 0 0); transition: clip-path 300ms var(--ease-out);
 }
-.side-box.on { clip-path: inset(0 0 0 0); min-width: 58px; padding: 0 8px; }
-.side-box.injury { background: var(--injury); color: #fff; gap: 6px; grid-auto-flow: column; }
-.side-box.injury::before { content: "✚"; font-size: 18px; }
+.bug .side-box.on { clip-path: inset(0 0 0 0); min-width: 58px; padding: 0 8px; }
+.bug .side-box.injury { background: var(--injury); color: #fff; gap: 6px; grid-auto-flow: column; }
+.bug .side-box.injury::before { content: "✚"; font-size: 18px; }
 /* gota desenhada em CSS (emoji não renderiza no OBS do Windows) */
-.side-box.blood::before { content: ""; width: 12px; height: 12px; background: #fff; border-radius: 0 50% 50% 50%; transform: rotate(45deg); }
-.side-box.urgent { animation: blink 1s steps(2, start) infinite; }
+.bug .side-box.blood::before { content: ""; width: 12px; height: 12px; background: #fff; border-radius: 0 50% 50% 50%; transform: rotate(45deg); }
+.bug .side-box.urgent { animation: blink 1s steps(2, start) infinite; }
 /* cronômetro pausado no Timing */
-.side-box.paused { opacity: .7; }
+.bug .side-box.paused { opacity: .7; }
 
 /* Painel lateral (challenge / vencedor) — desliza para fora a partir do placar */
-.panel {
+.bug .panel {
   position: absolute; top: 0; height: 100%; margin-left: 12px; overflow: hidden; pointer-events: none;
   left: calc(56px + var(--w-who) + var(--w-country) + var(--w-bar) + var(--w-score));
   transition: margin-left 300ms var(--ease-out);
 }
 /* se a caixa lateral (passividade/atendimento) estiver no ar na mesma linha, o painel abre depois dela */
-.row:has(.side-box.on) .panel { margin-left: 92px; }
-.panel-in {
+.bug .row:has(.side-box.on) .panel { margin-left: 92px; }
+.bug .panel-in {
   height: 100%; display: flex; align-items: center; gap: 14px; padding: 0 70px 0 16px;
   background: linear-gradient(90deg, #fff 0%, #fff 78%, rgba(255,255,255,0) 100%);
   transform: translateX(-102%); transition: transform 450ms var(--ease-out);
   white-space: nowrap;
 }
-.panel.on .panel-in { transform: translateX(0); }
-.panel .p-name { font-size: 22px; font-weight: 700; color: var(--ink); text-transform: uppercase; }
-.panel .p-status { font-size: 24px; font-weight: 800; color: var(--challenge); text-transform: uppercase; letter-spacing: .02em; }
-.panel .p-status.swap { animation: swap 380ms var(--ease-out); }
-.panel.st-requested .p-status { font-size: 16px; letter-spacing: .08em; }
-.panel.st-won .p-status { color: #138a3e; }
-.panel.st-lost .p-status { color: var(--injury); }
-.panel.st-canceled .p-status { color: #6b7280; }
-.panel.victory .panel-in { background: linear-gradient(90deg, var(--gold) 0%, var(--gold) 78%, rgba(217,180,90,0) 100%); }
-.panel.victory .p-status { color: var(--ink); }
+.bug .panel.on .panel-in { transform: translateX(0); }
+.bug .panel .p-name { font-size: 22px; font-weight: 700; color: var(--ink); text-transform: uppercase; }
+.bug .panel .p-status { font-size: 24px; font-weight: 800; color: var(--challenge); text-transform: uppercase; letter-spacing: .02em; }
+.bug .panel .p-status.swap { animation: swap 380ms var(--ease-out); }
+.bug .panel.st-requested .p-status { font-size: 16px; letter-spacing: .08em; }
+.bug .panel.st-won .p-status { color: #138a3e; }
+.bug .panel.st-lost .p-status { color: var(--injury); }
+.bug .panel.st-canceled .p-status { color: #6b7280; }
+.bug .panel.victory .panel-in { background: linear-gradient(90deg, var(--gold) 0%, var(--gold) 78%, rgba(217,180,90,0) 100%); }
+.bug .panel.victory .p-status { color: var(--ink); }
 
 /* Vitória: destaca o vencedor, atenua o perdedor */
 .bug.has-winner .row { transition: filter 400ms ease; }
@@ -128,27 +128,27 @@ img.flag[src=""], img.flag:not([src]) { visibility: hidden; }
 .bug.has-winner .row.loser { filter: grayscale(.85) brightness(.75); }
 .bug.has-winner .row.winner .who { box-shadow: inset 0 -5px 0 var(--gold); }
 
-.foot {
+.bug .foot {
   display: flex; align-items: center; gap: 18px;
   margin-left: 56px; height: 44px; padding-left: 14px;
   background: rgba(5, 8, 16, .88); color: #fff; font-size: 22px; font-weight: 600;
   width: calc(var(--w-who) + var(--w-country) + var(--w-bar) + var(--w-score));
   box-sizing: border-box;
 }
-.foot #category { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: clip; transition: opacity 200ms ease; }
-.foot #period { white-space: nowrap; transition: opacity 200ms ease; }
+.bug .foot #category { flex: 1 1 auto; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: clip; transition: opacity 200ms ease; }
+.bug .foot #period { white-space: nowrap; transition: opacity 200ms ease; }
 /* recolhido: só o relógio, alinhado sob o placar (categoria e período saem) */
 .bug.collapsed .foot #category, .bug.collapsed .foot #period { opacity: 0; }
-.foot { transition: background-color 300ms ease; }
+.bug .foot { transition: background-color 300ms ease; }
 .bug.collapsed .foot { background-color: transparent; justify-content: flex-end; }
 .bug.collapsed .foot #period { display: none; }
-.foot #period:empty { display: none; }
-.clock {
+.bug .foot #period:empty { display: none; }
+.bug .clock {
   align-self: stretch; display: grid; place-items: center; min-width: 96px;
   background: var(--paper); color: var(--ink); font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums;
 }
-.clock.final { color: var(--injury); }
-.clock.final.tick { animation: bump 450ms var(--ease-out); }
+.bug .clock.final { color: var(--injury); }
+.bug .clock.final.tick { animation: bump 450ms var(--ease-out); }
 
 /* ================= APRESENTAÇÃO DA LUTA ================= */
 .intro {
@@ -213,17 +213,17 @@ img.flag[src=""], img.flag:not([src]) { visibility: hidden; }
    mistura com o fundo vira franja verde/azul depois do recorte. */
 body.chroma-green { background: #00ff00; }
 body.chroma-blue { background: #0000ff; }
-body[class*="chroma-"] .phase span,
-body[class*="chroma-"] .foot,
+body[class*="chroma-"] .bug .phase span,
+body[class*="chroma-"] .bug .foot,
 body[class*="chroma-"] .intro-rows { background: #05080f; }
 body[class*="chroma-"] .bug.collapsed .foot { background: transparent; }
-body[class*="chroma-"] .phase .logo { filter: none; }
+body[class*="chroma-"] .bug .phase .logo { filter: none; }
 body[class*="chroma-"] .row .flag { box-shadow: 0 0 0 2px #fff; }
 /* degradês que terminavam em transparente passam a terminar sólidos */
-body[class*="chroma-"] .panel-in { background: #fff; padding-right: 24px; }
-body[class*="chroma-"] .panel.victory .panel-in { background: var(--gold); }
+body[class*="chroma-"] .bug .panel-in { background: #fff; padding-right: 24px; }
+body[class*="chroma-"] .bug .panel.victory .panel-in { background: var(--gold); }
 body[class*="chroma-"] .intro-band { background: var(--navy-2); width: 100%; }
 /* perdedor esmaecido sem filtro (o filtro não mistura com o fundo, mas mantemos tons sólidos) */
 body[class*="chroma-"] .bug.has-winner .row.loser { filter: grayscale(.85) brightness(.75); }
 /* verde do "Challenge won" mais escuro, longe do verde de chroma */
-body.chroma-green .panel.st-won .p-status { color: #0b5d2a; }
+body.chroma-green .bug .panel.st-won .p-status { color: #0b5d2a; }

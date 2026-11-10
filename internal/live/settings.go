@@ -32,10 +32,38 @@ type Settings struct {
 	Background string `json:"background"`
 	// AutoIntro: mostra a apresentação quando o Timing carrega a luta e tira quando o cronômetro inicia.
 	AutoIntro bool `json:"autoIntro"`
+	// Scoreboard: modelo visual do placar (ver ScoreboardModels).
+	Scoreboard string `json:"scoreboard"`
+	// Position: onde o placar fica na tela (ver Positions).
+	Position string `json:"position"`
+	// IntroPosition: onde a apresentação fica: "auto" (a padrão do modelo) ou uma de Positions.
+	IntroPosition string `json:"introPosition"`
+	// IntroStyle: modelo da apresentação da luta (ver IntroStyles).
+	IntroStyle string `json:"introStyle"`
+	// Anim: animação de entrada/saída: "auto" (a do modelo), "fade", "slide", "drop", "zoom" ou "wipe".
+	Anim string `json:"anim"`
+}
+
+// Modelos disponíveis; precisam existir em web/themes.js.
+var (
+	ScoreboardModels = []string{"classic", "broadcast", "stack", "compact", "league", "futy", "arena", "clean", "duel", "flo", "dual", "judo", "uww"}
+	IntroStyles      = []string{"lower", "versus", "card", "topbar", "arena", "clean", "split", "ticker", "uww"}
+	Positions        = []string{"top-start", "top-center", "top-end", "bottom-start", "bottom-center", "bottom-end"}
+	Animations       = []string{"auto", "fade", "slide", "drop", "zoom", "wipe"}
+)
+
+func oneOf(v string, list []string) bool {
+	for _, x := range list {
+		if x == v {
+			return true
+		}
+	}
+	return false
 }
 
 func DefaultSettings() Settings {
-	return Settings{CollapseMode: "auto", AfterScoreSeconds: 6, ShowStartIn: false, ShowEventInfo: true, Background: "transparent", AutoIntro: true}
+	return Settings{CollapseMode: "auto", AfterScoreSeconds: 6, ShowStartIn: false, ShowEventInfo: true, Background: "transparent", AutoIntro: true,
+		Scoreboard: "classic", Position: "top-start", IntroPosition: "auto", IntroStyle: "lower", Anim: "auto"}
 }
 
 func (s Settings) Validate() error {
@@ -48,6 +76,21 @@ func (s Settings) Validate() error {
 	case "transparent", "green", "blue":
 	default:
 		return fmt.Errorf(`background deve ser "transparent", "green" ou "blue"`)
+	}
+	if !oneOf(s.Scoreboard, ScoreboardModels) {
+		return fmt.Errorf("scoreboard deve ser um de %v", ScoreboardModels)
+	}
+	if !oneOf(s.Position, Positions) {
+		return fmt.Errorf("position deve ser um de %v", Positions)
+	}
+	if s.IntroPosition != "auto" && !oneOf(s.IntroPosition, Positions) {
+		return fmt.Errorf(`introPosition deve ser "auto" ou um de %v`, Positions)
+	}
+	if !oneOf(s.IntroStyle, IntroStyles) {
+		return fmt.Errorf("introStyle deve ser um de %v", IntroStyles)
+	}
+	if !oneOf(s.Anim, Animations) {
+		return fmt.Errorf("anim deve ser um de %v", Animations)
 	}
 	if s.AfterScoreSeconds < 0 || s.AfterScoreSeconds > 60 {
 		return fmt.Errorf("afterScoreSeconds deve estar entre 0 e 60")
@@ -75,6 +118,13 @@ func NewSettingsStore(dir string, hub *mercure.Hub) (*SettingsStore, error) {
 	loaded := DefaultSettings() // campos novos ganham o valor padrão
 	if err := json.Unmarshal(b, &loaded); err != nil {
 		return nil, fmt.Errorf("%s inválido: %w", st.path, err)
+	}
+	// valores antigos ("left"/"center") viraram as posições nomeadas
+	switch loaded.Position {
+	case "left":
+		loaded.Position = "top-start"
+	case "center":
+		loaded.Position = "top-center"
 	}
 	if err := loaded.Validate(); err != nil {
 		slog.Warn("configurações inválidas no disco; usando padrão", "err", err)

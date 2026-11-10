@@ -4,54 +4,13 @@
 <meta charset="utf-8">
 <title>CBW Overlay</title>
 <link rel="stylesheet" href="/overlay.css">
+<link rel="stylesheet" href="/themes.css">
 </head>
 <body>
 
-<!-- Placar (canto superior esquerdo) -->
-<section id="bug" class="bug out">
-  <div class="phase"><img class="logo" id="logo" src="/assets/logo.svg" alt="" onerror="this.remove()"><span id="phase"></span></div>
-
-  <div class="row home" data-side="home">
-    <img class="flag" id="f-home" alt="">
-    <span class="who"><span class="name" id="n-home"></span></span>
-    <span class="country"><span class="cards" id="k-home"></span><span class="code" id="c-home"></span></span>
-    <span class="bar"></span>
-    <span class="score" id="s-home"><b>0</b></span>
-    <span class="side-box" id="x-home"></span>
-    <div class="panel" id="p-home"><div class="panel-in">
-      <span class="p-name"></span><span class="p-status"></span>
-    </div></div>
-  </div>
-
-  <div class="row away" data-side="away">
-    <img class="flag" id="f-away" alt="">
-    <span class="who"><span class="name" id="n-away"></span></span>
-    <span class="country"><span class="cards" id="k-away"></span><span class="code" id="c-away"></span></span>
-    <span class="bar"></span>
-    <span class="score" id="s-away"><b>0</b></span>
-    <span class="side-box" id="x-away"></span>
-    <div class="panel" id="p-away"><div class="panel-in">
-      <span class="p-name"></span><span class="p-status"></span>
-    </div></div>
-  </div>
-
-  <div class="foot">
-    <span id="category"></span>
-    <span id="period"></span>
-    <span class="clock" id="clock">0:00</span>
-  </div>
-</section>
-
-<!-- Apresentação da luta (tarja inferior) -->
-<section id="intro" class="intro out">
-  <div class="intro-start" id="intro-start"></div>
-  <div class="intro-rows">
-    <div class="intro-row home"><img class="flag" id="if-home" alt=""><span class="country" id="ic-home"></span><span class="name" id="in-home"></span></div>
-    <div class="intro-row away"><img class="flag" id="if-away" alt=""><span class="country" id="ic-away"></span><span class="name" id="in-away"></span></div>
-  </div>
-  <div class="intro-band" id="intro-band"></div>
-  <div class="intro-event"><span id="ie-name"></span><span id="ie-city"></span></div>
-</section>
+<!-- Placar e apresentação: a marcação vem do modelo escolhido (themes.js) -->
+<div id="board"></div>
+<div id="introbox"></div>
 
 <pre id="debug" class="debug" hidden></pre>
 <script type="module" src="/overlay.js"></script>

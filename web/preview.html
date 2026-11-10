@@ -54,6 +54,11 @@
     <label class="group">Configurações
       <select class="input" id="cfg" style="width:auto;min-height:34px"><option value="live">As salvas</option><option value="default">Padrão</option></select>
     </label>
+    <label class="group">Placar <select class="input" id="board" style="width:auto;min-height:34px"></select></label>
+    <label class="group">Posição <select class="input" id="pos" style="width:auto;min-height:34px"><option value="">Salva</option></select></label>
+    <label class="group">Posição apres. <select class="input" id="ipos" style="width:auto;min-height:34px"><option value="">Salva</option></select></label>
+    <label class="group">Apresentação <select class="input" id="intro" style="width:auto;min-height:34px"></select></label>
+    <label class="group">Animação <select class="input" id="anim" style="width:auto;min-height:34px"></select></label>
   </div>
 
   <div id="main"></div>
@@ -62,19 +67,39 @@
 <script type="module">
 import { SCENARIOS } from '/mocks.js';
 import { mountHeader, icon, esc } from '/ui.js';
+import { BOARDS, INTROS, ANIMS, POSITIONS } from '/themes.js';
 mountHeader('gallery');
 
 // Recorte de cada tipo de cena no quadro 1920×1080 (x, y, largura, altura)
 const REGIONS = {
-  bug: [30, 20, 700, 300],        // só o placar
+  bug: [20, 20, 1260, 300],        // só o placar
   wide: [30, 20, 1150, 300],      // placar + painel lateral (challenge, vitória, tempo)
   intro: [380, 690, 1160, 390],   // tarja inferior
 };
+const savedModels = { board: 'classic', pos: 'top-start', intro: 'lower', ipos: 'auto' };
+const LEG = { left: 'top-start', center: 'top-center' };
+fetch('/api/settings').then((r) => r.json()).then((s) => { Object.assign(savedModels, { board: s.scoreboard, pos: LEG[s.position] || s.position, intro: s.introStyle, ipos: s.introPosition }); render(); }).catch(() => {});
+const IW = { lower: 1000, versus: 1320, card: 900, topbar: 1120, arena: 1140, clean: 680, split: 1800, ticker: 1580, uww: 1260 };
+const IH = { lower: 310, versus: 270, card: 520, topbar: 220, arena: 300, clean: 290, split: 330, ticker: 170, uww: 250 };
 const regionFor = (name, sc) => {
-  if (name.startsWith('apresentacao')) return REGIONS.intro;
-  return ['Challenge', 'Resultado', 'Tempo'].includes(sc.group) ? REGIONS.wide : REGIONS.bug;
+  if (name.startsWith('apresentacao')) {
+    const id = introSel.value || savedModels.intro;
+    const ip = iposSel.value || (savedModels.ipos !== 'auto' ? savedModels.ipos : INTROS[id].pos);
+    const [v, h] = ip.split('-'), w = IW[id] + 40;
+    return [h === 'start' ? 20 : h === 'end' ? 1920 - 60 - IW[id] - 20 : 960 - w / 2, v === 'top' ? 30 : v === 'bottom' ? 1010 - IH[id] : (1080 - IH[id]) / 2 - 20, w, IH[id] + 40];
+  }
+  const [v, h] = (posSel.value || savedModels.pos).split('-');
+  const tall = ['Challenge', 'Resultado', 'Tempo'].includes(sc.group);
+  return [{ start: 10, center: 330, end: 590 }[h], v === 'top' ? 20 : (tall ? 740 : 780), 1330, tall ? 320 : 290];
 };
 
+const opt = (v, l) => `<option value="${v}">${esc(l)}</option>`;
+const boardSel = document.getElementById('board'), iposSel = document.getElementById('ipos'), posSel = document.getElementById('pos'), introSel = document.getElementById('intro'), animSel = document.getElementById('anim');
+const posOpts = POSITIONS.map(([k, l]) => opt(k, l)).join('');
+boardSel.innerHTML = opt('', 'Salvo') + Object.entries(BOARDS).map(([k, m]) => opt(k, m.label)).join('');
+introSel.innerHTML = opt('', 'Salva') + Object.entries(INTROS).map(([k, m]) => opt(k, m.label)).join('');
+posSel.insertAdjacentHTML('beforeend', posOpts); iposSel.insertAdjacentHTML('beforeend', posOpts);
+animSel.innerHTML = opt('', 'Salva') + ANIMS.map(([k, l]) => opt(k, l)).join('');
 const main = document.getElementById('main');
 const cfgSel = document.getElementById('cfg');
 const bgSel = document.getElementById('bg');
@@ -100,7 +125,8 @@ chips.addEventListener('click', (e) => {
 // bg=transparent: a galeria mostra o gráfico sobre o "Fundo" escolhido aqui,
 // mesmo que o overlay esteja configurado com chroma verde/azul.
 const still = new URLSearchParams(location.search).get('still') === '1' ? '&still=1' : ''; // prints: sem animação
-const src = (name) => `/overlay.html?mock=${encodeURIComponent(name)}&bg=transparent${still}${cfgSel.value === 'default' ? '&settings=default' : ''}`;
+const q = (k, el) => (el.value ? `&${k}=${el.value}` : '');
+const src = (name) => `/overlay.html?mock=${encodeURIComponent(name)}&bg=transparent${still}${cfgSel.value === 'default' ? '&settings=default' : ''}${q('board', boardSel)}${q('pos', posSel)}${q('ipos', iposSel)}${q('introstyle', introSel)}${q('anim', animSel)}`;
 
 function render() {
   main.replaceChildren();
@@ -135,6 +161,7 @@ function render() {
   }
 }
 cfgSel.onchange = render;
+[boardSel, posSel, iposSel, introSel, animSel].forEach((el) => { el.onchange = render; });
 renderChips();
 render();
 </script>

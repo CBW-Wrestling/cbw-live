@@ -12,6 +12,8 @@
 //  3. Controles do operador (/control.html): intro, challenge, injury, passivity, victory —
 //     estados que o Timing ainda não publicou ao vivo.
 
+import { BOARDS, INTROS, POSITIONS } from '/themes.js';
+
 const params = new URLSearchParams(location.search);
 const eventId = params.get('event');
 const matName = params.get('mat');
@@ -28,7 +30,8 @@ const SIDES = ['home', 'away'];
 const FINAL_SECONDS = 10;
 
 const state = { snapshot: null, live: null, serverOffset: 0, liveAt: 0, scoreAt: 0,
-  settings: { collapseMode: 'auto', afterScoreSeconds: 6, showStartIn: false, showEventInfo: true, background: 'transparent' } };
+  settings: { collapseMode: 'auto', afterScoreSeconds: 6, showStartIn: false, showEventInfo: true, background: 'transparent',
+    scoreboard: 'classic', position: 'top-start', introPosition: 'auto', introStyle: 'lower', anim: 'auto' } };
 const prev = { score: {}, clockText: null, panel: {} };
 
 // ---------- utilitários ----------
@@ -39,7 +42,7 @@ const parseTime = (t) => {
 };
 const fmt = (s) => `${Math.floor(s / 60)}:${String(Math.floor(s % 60)).padStart(2, '0')}`;
 const serverNow = () => Date.now() + state.serverOffset;
-const setText = (el, v) => { const s = v == null ? '' : String(v); if (el.textContent !== s) el.textContent = s; };
+const setText = (el, v) => { if (!el) return; const s = v == null ? '' : String(v); if (el.textContent !== s) el.textContent = s; };
 const setSrc = (img, code) => {
   const src = code ? `/flags/${String(code).toLowerCase()}.svg` : '';
   if (img.getAttribute('src') !== src) img.setAttribute('src', src);
@@ -121,6 +124,7 @@ function render() {
     if (snap.colors.athlete2) root.setProperty('--c-away', snap.colors.athlete2);
   }
   applyBackground();
+  applyTheme();
   const m = model();
   const ctl = m?.control || {};
   const intro = ctl.intro;
@@ -134,6 +138,11 @@ function render() {
   setText($('phase'), m.phase);
   setText($('category'), m.category);
   setText($('period'), m.period ? `Period ${m.period}` : '');
+  setText($('pn'), m.period || '');
+  setText($('bout'), m.matchNo ? `Bout ${m.matchNo}` : '');
+  setText($('in-cat'), m.category);
+  setText($('in-phase'), m.phase);
+  setText($('in-no'), m.matchNo ? `Fight ${m.matchNo}` : '');
 
   for (const side of SIDES) {
     const a = m[side];
@@ -151,7 +160,7 @@ function render() {
     // advertências (cartões)
     const k = $(`k-${side}`);
     if (k.childElementCount !== a.cautions) k.replaceChildren(...Array.from({ length: a.cautions }, () => document.createElement('i')));
-    document.querySelector(`.row.${side}`).classList.toggle('adv', m.advantage === side);
+    sideEl(side).classList.toggle('adv', m.advantage === side);
 
     // intro
     setSrc($(`if-${side}`), a.country);
@@ -191,7 +200,7 @@ function renderPanels(m, ctl) {
   const v = ctl.victory;
   bug.classList.toggle('has-winner', !!v);
   for (const side of SIDES) {
-    const row = document.querySelector(`.row.${side}`);
+    const row = sideEl(side);
     row.classList.toggle('winner', v?.side === side);
     row.classList.toggle('loser', !!v && v.side !== side);
 
@@ -257,6 +266,34 @@ function fit() {
 }
 addEventListener('resize', fit);
 fit();
+
+// ---------- modelos (placar / apresentação / posição / animação) ----------
+// ?board=, ?introstyle=, ?pos=, ?anim= na URL têm prioridade sobre as configurações.
+const sideEl = (side) => $('bug').querySelector(`[data-side="${side}"]`);
+const pick = (param, key, valid, fallback) => { const v = params.get(param) || state.settings[key]; return valid.includes(v) ? v : fallback; };
+const mounted = {};
+function mount(box, id, models, name) {
+  if (mounted[id] === name) return false;
+  mounted[id] = name;
+  box.innerHTML = models[name].html();
+  return true;
+}
+const LEGACY_POS = { left: 'top-start', center: 'top-center' }; // valores antigos
+const POS_IDS = POSITIONS.map((p) => p[0]);
+function applyTheme() {
+  const board = pick('board', 'scoreboard', Object.keys(BOARDS), 'classic');
+  const intro = pick('introstyle', 'introStyle', Object.keys(INTROS), 'lower');
+  const norm = (v) => LEGACY_POS[v] || v;
+  const b = document.body.dataset;
+  const posParam = norm(params.get('pos')), posCfg = norm(state.settings.position);
+  b.pos = POS_IDS.includes(posParam) ? posParam : POS_IDS.includes(posCfg) ? posCfg : 'top-start';
+  const ipParam = norm(params.get('ipos')), ipCfg = norm(state.settings.introPosition);
+  b.ipos = POS_IDS.includes(ipParam) ? ipParam : POS_IDS.includes(ipCfg) ? ipCfg : INTROS[intro].pos; // "auto" = padrão do modelo
+  b.anim = pick('anim', 'anim', ['auto', 'fade', 'slide', 'drop', 'zoom', 'wipe'], 'auto');
+  b.board = board;
+  if (mount($('board'), 'board', BOARDS, board)) for (const k of Object.keys(prev.panel)) delete prev.panel[k];
+  mount($('introbox'), 'intro', INTROS, intro);
+}
 
 // ---------- fundo (transparente ou chroma key) ----------
 // ?bg=green|blue|transparent na URL tem prioridade sobre as configurações.

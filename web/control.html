@@ -217,7 +217,8 @@ $('copy-url').innerHTML = icon('copy');
 $('open-url').innerHTML = icon('external');
 
 const overlayPath = `/overlay.html?event=${encodeURIComponent(eventId)}&mat=${encodeURIComponent(mat)}`;
-$('preview').src = overlayPath;
+// ?bg=transparent|green|blue na URL desta página força o fundo só da prévia
+$('preview').src = overlayPath + (params.get('bg') ? `&bg=${encodeURIComponent(params.get('bg'))}` : '') + (params.get('still') === '1' ? '&still=1' : '');
 $('overlay-url').value = location.origin + overlayPath;
 $('open-url').href = overlayPath;
 $('copy-url').onclick = () => copyText(location.origin + overlayPath);

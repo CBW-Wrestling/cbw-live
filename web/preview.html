@@ -99,7 +99,8 @@ chips.addEventListener('click', (e) => {
 
 // bg=transparent: a galeria mostra o gráfico sobre o "Fundo" escolhido aqui,
 // mesmo que o overlay esteja configurado com chroma verde/azul.
-const src = (name) => `/overlay.html?mock=${encodeURIComponent(name)}&bg=transparent${cfgSel.value === 'default' ? '&settings=default' : ''}`;
+const still = new URLSearchParams(location.search).get('still') === '1' ? '&still=1' : ''; // prints: sem animação
+const src = (name) => `/overlay.html?mock=${encodeURIComponent(name)}&bg=transparent${still}${cfgSel.value === 'default' ? '&settings=default' : ''}`;
 
 function render() {
   main.replaceChildren();

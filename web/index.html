@@ -37,6 +37,13 @@
   .on-air { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 16px 0; min-height: 10px; }
   .mat-actions { display: flex; gap: 8px; padding: 14px 16px 16px; margin-top: auto; }
   .mat-actions .btn:not(.icon-btn) { flex: 1; }
+
+  .credit {
+    display: flex; align-items: center; justify-content: center; gap: 12px;
+    margin-top: 56px; padding-top: 24px; border-top: 1px solid var(--line);
+    color: var(--faint); font-size: 12.5px; letter-spacing: .02em;
+  }
+  .credit img { height: 30px; width: auto; display: block; opacity: .85; }
 </style>
 </head>
 <body>
@@ -62,6 +69,11 @@
     <div class="section-title"><h2>Carregando…</h2></div>
     <div class="grid cols-auto"><div class="card skeleton" style="height:260px"></div><div class="card skeleton" style="height:260px"></div><div class="card skeleton" style="height:260px"></div></div>
   </div>
+
+  <footer class="credit">
+    <span>Desenvolvido por</span>
+    <img src="/assets/wizd-digital.svg" alt="Wizd Digital">
+  </footer>
 </main>
 
 <script type="module">

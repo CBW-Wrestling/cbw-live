@@ -16,6 +16,12 @@ const params = new URLSearchParams(location.search);
 const eventId = params.get('event');
 const matName = params.get('mat');
 const debug = params.get('debug') === '1';
+// still=1: sem transições/animações — mostra direto o estado final (prints, divulgação)
+if (params.get('still') === '1') {
+  const st = document.createElement('style');
+  st.textContent = '*, *::before, *::after { transition: none !important; animation: none !important; }';
+  document.head.append(st);
+}
 
 const $ = (id) => document.getElementById(id);
 const SIDES = ['home', 'away'];

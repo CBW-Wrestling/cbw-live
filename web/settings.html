@@ -4,114 +4,151 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CBW Live — Configurações</title>
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/ui.css">
 <style>
-  :root { --bg: #0e1117; --panel: #171b24; --line: #2a3040; --text: #e8ebf2; --muted: #8a93a6; --accent: #4fd1c5; --ok: #1f9d55; --bad: #d0021b; }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, sans-serif; }
-  header { display: flex; align-items: center; gap: 16px; padding: 14px 20px; border-bottom: 1px solid var(--line); }
-  header h1 { font-size: 18px; margin: 0; }
-  header a { color: var(--accent); font-size: 14px; }
-  main { max-width: 760px; padding: 20px; }
-  section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; }
-  section h2 { margin: 0 0 4px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); }
-  .field { padding: 12px 0; border-top: 1px solid var(--line); }
-  .field:first-of-type { border-top: 0; }
-  .field label.title { display: block; font-weight: 600; margin-bottom: 6px; }
-  .hint { color: var(--muted); font-size: 13px; margin: 6px 0 0; }
-  .options { display: grid; gap: 8px; }
-  .options label { display: flex; gap: 10px; align-items: flex-start; padding: 10px 12px; border: 1px solid var(--line); border-radius: 6px; cursor: pointer; }
-  .options label:has(input:checked) { border-color: var(--accent); background: #13252a; }
-  .options small { display: block; color: var(--muted); }
-  .switch { display: flex; align-items: center; justify-content: space-between; gap: 16px; }
-  input[type=checkbox] { width: 20px; height: 20px; accent-color: var(--accent); }
-  input[type=number] { width: 90px; padding: 8px; background: #222838; color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; }
-  fieldset { border: 0; margin: 0; padding: 0; }
-  fieldset:disabled { opacity: .45; }
-  .bar { display: flex; align-items: center; gap: 12px; }
-  button { appearance: none; border: 0; background: var(--accent); color: #062a27; border-radius: 6px; padding: 11px 20px; font: inherit; font-weight: 700; cursor: pointer; }
-  button:disabled { opacity: .5; cursor: default; }
-  #status { font-size: 14px; color: var(--muted); }
-  #status.ok { color: #6ee7a0; } #status.err { color: #ff8a8a; }
+  .settings { display: grid; grid-template-columns: 220px minmax(0, 760px); gap: 28px; align-items: start; }
+  @media (max-width: 900px) { .settings { grid-template-columns: 1fr; } .toc { display: none; } }
+  .toc { position: sticky; top: 90px; display: grid; gap: 2px; }
+  .toc a { padding: 8px 12px; border-radius: 8px; color: var(--muted); text-decoration: none; font-weight: 550; font-size: 14px; }
+  .toc a:hover { color: var(--text); background: var(--surface-2); }
+  .card + .card { margin-top: 16px; }
+  .card-body h4 { margin: 0 0 4px; font-size: 15px; }
+  .choice { display: grid; gap: 10px; margin-top: 12px; }
+  .bg-swatches { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 12px; }
+  @media (max-width: 600px) { .bg-swatches { grid-template-columns: 1fr; } }
+  .swatch { position: relative; cursor: pointer; }
+  .swatch input { position: absolute; opacity: 0; }
+  .swatch .box { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--line-strong); border-radius: 12px; background: var(--bg); transition: border-color .15s, box-shadow .15s; }
+  .swatch .sample { height: 64px; border-radius: 8px; position: relative; overflow: hidden; }
+  .swatch .sample::after { content: ""; position: absolute; left: 10px; top: 14px; width: 60%; height: 12px; border-radius: 3px; background: #fff; box-shadow: 0 18px 0 #fff; }
+  .swatch b { font-size: 13.5px; }
+  .swatch small { color: var(--muted); font-size: 12px; }
+  .swatch input:checked + .box { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-soft); }
+  .swatch input:focus-visible + .box { outline: 2px solid var(--brand); }
+  .s-transparent { background: repeating-conic-gradient(#1a2547 0% 25%, #121a35 0% 50%) 50% / 14px 14px; }
+  .s-green { background: #00ff00; }
+  .s-blue { background: #0000ff; }
+  .number { width: 90px; text-align: center; }
+  .savebar {
+    position: sticky; bottom: 16px; margin-top: 20px; display: flex; align-items: center; gap: 14px;
+    padding: 12px 16px; border-radius: 14px; background: rgba(20, 32, 66, .92); backdrop-filter: blur(10px);
+    border: 1px solid var(--line-strong); box-shadow: var(--shadow);
+  }
+  .savebar .state { color: var(--muted); font-size: 13.5px; }
+  .savebar.dirty { border-color: rgba(253, 190, 19, .6); }
+  .savebar.dirty .state { color: var(--brand); }
 </style>
 </head>
 <body>
-<header>
-  <h1>CBW Live — Configurações</h1>
-  <a href="/">← tapetes</a>
-</header>
-<main>
-  <form id="form">
-    <section>
-      <h2>Placar</h2>
-      <div class="field">
-        <label class="title">Modo recolhido (sem o nome do atleta)</label>
-        <div class="options">
-          <label><input type="radio" name="collapseMode" value="auto">
-            <span>Automático<small>Expandido antes da luta, nas paradas, após um ponto e com challenge/atendimento/vitória; recolhido com o cronômetro correndo.</small></span></label>
-          <label><input type="radio" name="collapseMode" value="never">
-            <span>Nunca recolher<small>O nome fica sempre visível.</small></span></label>
-          <label><input type="radio" name="collapseMode" value="always">
-            <span>Sempre recolhido<small>Só bandeira, país e placar.</small></span></label>
-        </div>
-      </div>
-      <fieldset class="field" id="auto-opts">
-        <div class="switch">
-          <label class="title" for="afterScoreSeconds">Expandir após um ponto (segundos)</label>
-          <input type="number" id="afterScoreSeconds" name="afterScoreSeconds" min="0" max="60" step="1">
-        </div>
-        <p class="hint">Só no modo automático. 0 = não expande ao pontuar.</p>
-      </fieldset>
-    </section>
+<header id="app-header"></header>
 
-    <section>
-      <h2>Fundo do overlay</h2>
-      <div class="field">
-        <div class="options">
-          <label><input type="radio" name="background" value="transparent">
-            <span>Transparente<small>Browser Source do OBS/vMix (recomendado quando o overlay é usado direto como fonte).</small></span></label>
-          <label><input type="radio" name="background" value="green">
-            <span>Verde chroma key (#00FF00)<small>Para mesas/switchers que recortam por cor. Sombras e transparências ficam sólidas.</small></span></label>
-          <label><input type="radio" name="background" value="blue">
-            <span>Azul chroma key (#0000FF)<small>Alternativa se algum verde das bandeiras ou da logo for recortado.</small></span></label>
-        </div>
-        <p class="hint">Um overlay específico pode forçar o fundo pela URL: <code>&amp;bg=green</code>, <code>&amp;bg=blue</code> ou <code>&amp;bg=transparent</code>.</p>
-      </div>
-    </section>
-
-    <section>
-      <h2>Apresentação da luta</h2>
-      <div class="field switch">
-        <div>
-          <label class="title" for="autoIntro">Mostrar automaticamente ao carregar a luta</label>
-          <p class="hint">Entra quando a luta é carregada no UWW Timing e sai quando o cronômetro inicia. O botão da página de controle continua funcionando.</p>
-        </div>
-        <input type="checkbox" id="autoIntro" name="autoIntro">
-      </div>
-      <div class="field switch">
-        <label class="title" for="showEventInfo">Mostrar nome do evento e cidade</label>
-        <input type="checkbox" id="showEventInfo" name="showEventInfo">
-      </div>
-      <div class="field switch">
-        <div>
-          <label class="title" for="showStartIn">Mostrar "Início em"</label>
-          <p class="hint">Usa o horário previsto da luta no Arena (só aparece se faltar menos de 1 h). Confira o fuso do evento no Arena.</p>
-        </div>
-        <input type="checkbox" id="showStartIn" name="showStartIn">
-      </div>
-    </section>
-
-    <div class="bar">
-      <button type="submit" id="save">Salvar</button>
-      <span id="status"></span>
+<main class="page">
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">Configurações</div>
+      <h1>Preferências de exibição</h1>
+      <p>Valem para todos os tapetes e são aplicadas na hora nos overlays abertos — sem recarregar.</p>
     </div>
-    <p class="hint">Vale para todos os tapetes e é aplicado aos overlays abertos na hora. O ajuste "Placar" da página de controle sobrepõe o modo apenas naquele tapete.</p>
-  </form>
-</main>
-<script>
-const form = document.getElementById('form');
-const status = document.getElementById('status');
-const say = (t, cls = '') => { status.textContent = t; status.className = cls; };
+  </div>
 
+  <div class="settings">
+    <nav class="toc" aria-label="Seções">
+      <a href="#placar">Placar</a>
+      <a href="#fundo">Fundo do overlay</a>
+      <a href="#apresentacao">Apresentação da luta</a>
+    </nav>
+
+    <form id="form">
+      <section class="card" id="placar">
+        <div class="card-head"><span class="icon" data-icon="layout"></span><h3>Placar</h3></div>
+        <div class="card-body">
+          <h4>Modo recolhido</h4>
+          <p class="help">Recolhido mostra só bandeira, país, pontos e tempo — libera a tela durante a ação.</p>
+          <div class="seg" style="margin-top:12px" role="radiogroup" aria-label="Modo recolhido">
+            <label><input type="radio" name="collapseMode" value="auto"><span>Automático</span></label>
+            <label><input type="radio" name="collapseMode" value="never"><span>Nunca recolher</span></label>
+            <label><input type="radio" name="collapseMode" value="always"><span>Sempre recolhido</span></label>
+          </div>
+          <p class="help" id="collapse-help" style="margin-top:10px"></p>
+
+          <div class="setting" id="auto-opts" style="margin-top:14px">
+            <div class="text">
+              <b><label for="afterScoreSeconds">Expandir após um ponto</label></b>
+              <p class="help">Quanto tempo o nome volta a aparecer depois de uma pontuação (só no automático). 0 = não expande.</p>
+            </div>
+            <div class="row"><input class="input number" type="number" id="afterScoreSeconds" name="afterScoreSeconds" min="0" max="60" step="1"><span class="muted">s</span></div>
+          </div>
+        </div>
+      </section>
+
+      <section class="card" id="fundo">
+        <div class="card-head"><span class="icon" data-icon="tv"></span><h3>Fundo do overlay</h3></div>
+        <div class="card-body">
+          <p class="help">Transparente para usar direto como fonte no OBS/vMix; verde ou azul para mesas que recortam por cor (chroma key). Com chroma, sombras e transparências do gráfico ficam sólidas.</p>
+          <div class="bg-swatches" role="radiogroup" aria-label="Fundo do overlay">
+            <label class="swatch"><input type="radio" name="background" value="transparent"><span class="box"><span class="sample s-transparent"></span><b>Transparente</b><small>Browser Source (recomendado)</small></span></label>
+            <label class="swatch"><input type="radio" name="background" value="green"><span class="box"><span class="sample s-green"></span><b>Verde chroma</b><small>#00FF00</small></span></label>
+            <label class="swatch"><input type="radio" name="background" value="blue"><span class="box"><span class="sample s-blue"></span><b>Azul chroma</b><small>#0000FF — se algum verde for recortado</small></span></label>
+          </div>
+          <p class="help" style="margin-top:12px">Um overlay específico pode forçar o fundo pela URL: <code>&amp;bg=green</code>, <code>&amp;bg=blue</code> ou <code>&amp;bg=transparent</code>.</p>
+        </div>
+      </section>
+
+      <section class="card" id="apresentacao">
+        <div class="card-head"><span class="icon" data-icon="play"></span><h3>Apresentação da luta</h3></div>
+        <div class="card-body">
+          <div class="setting">
+            <div class="text"><b>Mostrar automaticamente ao carregar a luta</b><p class="help">Entra quando a luta é carregada no UWW Timing e sai quando ela fica pronta / o cronômetro inicia.</p></div>
+            <label class="switch"><input type="checkbox" name="autoIntro" aria-label="Apresentação automática"><i></i></label>
+          </div>
+          <div class="setting">
+            <div class="text"><b>Mostrar nome do evento e cidade</b><p class="help">Aba abaixo da faixa principal: "EVENTO | Cidade".</p></div>
+            <label class="switch"><input type="checkbox" name="showEventInfo" aria-label="Mostrar evento e cidade"><i></i></label>
+          </div>
+          <div class="setting">
+            <div class="text"><b>Mostrar "Início em"</b><p class="help">Usa o horário previsto da luta no Arena e só aparece se faltar menos de 1 h. Confira o fuso do evento no Arena.</p></div>
+            <label class="switch"><input type="checkbox" name="showStartIn" aria-label='Mostrar "Início em"'><i></i></label>
+          </div>
+        </div>
+      </section>
+
+      <div class="savebar" id="savebar">
+        <span class="state" id="state">Tudo salvo</span>
+        <span class="spacer"></span>
+        <button type="button" class="btn ghost" id="reset">Descartar</button>
+        <button type="submit" class="btn primary" id="save">Salvar alterações</button>
+      </div>
+    </form>
+  </div>
+</main>
+
+<script type="module">
+import { mountHeader, icon, toast } from '/ui.js';
+mountHeader('settings');
+document.querySelectorAll('[data-icon]').forEach((el) => { el.innerHTML = icon(el.dataset.icon); });
+
+const form = document.getElementById('form');
+const bar = document.getElementById('savebar');
+const stateEl = document.getElementById('state');
+let saved = null;
+
+const HELP = {
+  auto: 'Expandido antes da luta, nas paradas, após um ponto e com challenge/atendimento/vitória no ar; recolhido com o cronômetro correndo.',
+  never: 'O nome do atleta fica sempre visível.',
+  always: 'Só bandeira, país, pontos e tempo, o tempo todo.',
+};
+
+function read() {
+  return {
+    collapseMode: form.collapseMode.value,
+    afterScoreSeconds: Number(form.afterScoreSeconds.value || 0),
+    showStartIn: form.showStartIn.checked,
+    showEventInfo: form.showEventInfo.checked,
+    background: form.background.value,
+    autoIntro: form.autoIntro.checked,
+  };
+}
 function fill(s) {
   form.collapseMode.value = s.collapseMode;
   form.afterScoreSeconds.value = s.afterScoreSeconds;
@@ -121,33 +158,39 @@ function fill(s) {
   form.autoIntro.checked = s.autoIntro;
   sync();
 }
-function sync() { document.getElementById('auto-opts').disabled = form.collapseMode.value !== 'auto'; }
-form.addEventListener('change', () => { sync(); say('alterações não salvas'); });
+function sync() {
+  document.getElementById('collapse-help').textContent = HELP[form.collapseMode.value] || '';
+  const auto = form.collapseMode.value === 'auto';
+  document.getElementById('auto-opts').style.opacity = auto ? 1 : .45;
+  form.afterScoreSeconds.disabled = !auto;
+  const dirty = saved && JSON.stringify(read()) !== JSON.stringify(saved);
+  bar.classList.toggle('dirty', !!dirty);
+  stateEl.textContent = dirty ? 'Alterações não salvas' : 'Tudo salvo';
+  document.getElementById('save').disabled = !dirty;
+  document.getElementById('reset').disabled = !dirty;
+}
+form.addEventListener('input', sync);
+form.addEventListener('change', sync);
+document.getElementById('reset').onclick = () => saved && fill(saved);
 
 form.addEventListener('submit', async (e) => {
   e.preventDefault();
-  const body = {
-    collapseMode: form.collapseMode.value,
-    afterScoreSeconds: Number(form.afterScoreSeconds.value || 0),
-    showStartIn: form.showStartIn.checked,
-    showEventInfo: form.showEventInfo.checked,
-    background: form.background.value,
-    autoIntro: form.autoIntro.checked,
-  };
   document.getElementById('save').disabled = true;
   try {
-    const r = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+    const r = await fetch('/api/settings', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(read()) });
     if (!r.ok) throw new Error(await r.text());
-    fill(await r.json());
-    say('Salvo ✓', 'ok');
+    saved = await r.json();
+    fill(saved);
+    toast('Configurações salvas e aplicadas nos overlays', 'ok');
   } catch (err) {
-    say(err.message, 'err');
-  } finally {
-    document.getElementById('save').disabled = false;
+    toast(err.message, 'bad');
+    sync();
   }
 });
+addEventListener('beforeunload', (e) => { if (bar.classList.contains('dirty')) e.preventDefault(); });
 
-fetch('/api/settings').then((r) => r.json()).then(fill).catch(() => say('não consegui carregar as configurações', 'err'));
+fetch('/api/settings').then((r) => r.json()).then((s) => { saved = s; fill(s); })
+  .catch(() => toast('Não consegui carregar as configurações', 'bad'));
 </script>
 </body>
 </html>

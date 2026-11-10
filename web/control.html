@@ -4,183 +4,290 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CBW Live — Controle</title>
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/ui.css">
 <style>
-  :root { --bg: #0e1117; --panel: #171b24; --line: #2a3040; --text: #e8ebf2; --muted: #8a93a6;
-          --red: #c8102e; --blue: #2f8fd8; --gold: #d9b45a; --ok: #1f9d55; --bad: #d0021b; }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.35 system-ui, sans-serif; }
-  header { display: flex; align-items: center; gap: 16px; padding: 12px 20px; border-bottom: 1px solid var(--line); flex-wrap: wrap; }
-  header h1 { font-size: 18px; margin: 0; }
-  header .fight { color: var(--muted); }
-  header .fight b.home { color: #ff6b7d; } header .fight b.away { color: #6cb8ff; }
-  main { display: grid; grid-template-columns: minmax(320px, 1fr) minmax(320px, 960px); gap: 20px; padding: 20px; }
-  @media (max-width: 1100px) { main { grid-template-columns: 1fr; } }
-  section { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 14px 16px; margin-bottom: 14px; }
-  section h2 { margin: 0 0 10px; font-size: 14px; letter-spacing: .06em; text-transform: uppercase; color: var(--muted); display: flex; justify-content: space-between; }
-  .live-tag { font-size: 11px; padding: 2px 8px; border-radius: 99px; background: var(--ok); color: #fff; letter-spacing: .04em; }
-  .live-tag.off { background: var(--line); color: var(--muted); }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
-  button { appearance: none; border: 1px solid var(--line); background: #222838; color: var(--text); border-radius: 6px;
-           padding: 10px 12px; font: inherit; font-weight: 600; cursor: pointer; }
-  button:hover { border-color: #4a5470; }
-  button:active { transform: translateY(1px); }
-  button.home { border-left: 5px solid var(--red); }
-  button.away { border-left: 5px solid var(--blue); }
-  button.ok { background: #173d2a; } button.bad { background: #451820; } button.gold { background: #4a3d1c; }
-  button.hide { background: transparent; color: var(--muted); }
-  button.active { outline: 2px solid #fff; }
-  select { width: 100%; padding: 9px; background: #222838; color: var(--text); border: 1px solid var(--line); border-radius: 6px; font: inherit; margin-bottom: 8px; }
-  .hint { color: var(--muted); font-size: 12px; margin: 8px 0 0; }
-  .preview { position: sticky; top: 20px; }
-  .frame { position: relative; width: 100%; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 8px; border: 1px solid var(--line);
-           background: repeating-conic-gradient(#20242e 0% 25%, #191c24 0% 50%) 50% / 24px 24px; }
-  .frame iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; }
-  .toast { position: fixed; right: 20px; bottom: 20px; padding: 10px 14px; border-radius: 6px; background: var(--bad); color: #fff; opacity: 0; transition: opacity .2s; }
-  .toast.show { opacity: 1; }
-  kbd { background: #2a3040; border-radius: 4px; padding: 1px 5px; font-size: 11px; color: var(--muted); }
+  .layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(360px, 520px); gap: 20px; align-items: start; }
+  @media (max-width: 1100px) { .layout { grid-template-columns: 1fr; } }
+
+  /* luta ao vivo */
+  .hero { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; gap: 18px; align-items: center; padding: 18px 20px; }
+  .hero .mat-letter { width: 54px; height: 54px; border-radius: 14px; display: grid; place-items: center; background: var(--brand); color: var(--brand-ink); font-weight: 850; font-size: 26px; }
+  .hero .vs { display: grid; gap: 8px; min-width: 0; }
+  .hero .side { display: flex; align-items: center; gap: 12px; }
+  .hero .side .athlete { flex: 1; }
+  .hero .side .name { font-size: 17px; }
+  .hero .score { font-size: 28px; }
+  .hero .right { text-align: right; display: grid; gap: 6px; justify-items: end; }
+  .hero .clock { font-size: 34px; }
+  .hero .meta { color: var(--muted); font-size: 12.5px; }
+  .cards { display: flex; gap: 3px; }
+  .cards i { width: 8px; height: 12px; border-radius: 2px; background: #ffcc00; }
+
+  /* cartões de controle */
+  .controls { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 16px; }
+  @media (max-width: 760px) { .controls { grid-template-columns: 1fr; } }
+  .controls .wide { grid-column: 1 / -1; }
+  .card-head .state { margin-left: auto; }
+  .btns { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .btns .btn { white-space: nowrap; }
+  .btns + .btns { margin-top: 8px; }
+  .step { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 12px; margin: 12px 0 8px; text-transform: uppercase; letter-spacing: .08em; }
+  .step::after { content: ""; flex: 1; height: 1px; background: var(--line); }
+
+  /* coluna da prévia */
+  .aside { position: sticky; top: 84px; display: grid; gap: 16px; }
+  .preview-frame {
+    position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 10px;
+    background: repeating-conic-gradient(#141c35 0% 25%, #10172d 0% 50%) 50% / 22px 22px;
+    border: 1px solid var(--line);
+  }
+  .preview-frame iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; pointer-events: none; color-scheme: normal; }
+  /* color-scheme igual ao do overlay: senão o Chrome pinta o fundo do iframe (transparente) de branco */
+  .url-row { display: flex; gap: 8px; }
+  .url-row .input { font-family: var(--mono); font-size: 12px; }
+  .onair-list { display: grid; gap: 8px; }
+  .onair-item { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-radius: 10px; background: var(--bg); border: 1px solid var(--line); }
+  .onair-item .what { font-weight: 600; }
+  .onair-item .badge { margin-left: auto; }
+  .shortcuts { display: flex; gap: 14px; flex-wrap: wrap; color: var(--muted); font-size: 13px; }
 </style>
 </head>
 <body>
-<header>
-  <h1>CBW Live — Tapete <span id="mat"></span></h1>
-  <span class="fight" id="fight">carregando…</span>
-</header>
+<header id="app-header"></header>
 
-<main>
-  <div>
-    <section>
-      <h2>Placar neste tapete <span class="live-tag" id="tag-layout">padrão</span></h2>
-      <div class="grid">
-        <button data-layout="auto">Padrão</button>
-        <button data-layout="expanded">Expandido</button>
-        <button data-layout="collapsed">Recolhido</button>
-      </div>
-      <p class="hint">"Padrão" segue as <a href="/settings.html" target="_blank" style="color:#4fd1c5">configurações</a>. Expandido/Recolhido fixam o modo só neste tapete.</p>
-    </section>
-
-    <section>
-      <h2>Apresentação da luta <span class="live-tag off" id="tag-intro">fora</span></h2>
-      <div class="grid">
-        <button class="ok" data-c='{"graphic":"intro","visible":true}'>Mostrar <kbd>I</kbd></button>
-        <button class="hide" data-c='{"graphic":"intro","visible":false}'>Esconder</button>
-      </div>
-      <p class="hint">Enquanto a apresentação está no ar, o placar fica oculto.</p>
-    </section>
-
-    <section>
-      <h2>Challenge <span class="live-tag off" id="tag-challenge">fora</span></h2>
-      <div class="grid">
-        <button class="home" data-c='{"graphic":"challenge","visible":true,"side":"home","status":"requested"}'>Vermelho pediu</button>
-        <button class="away" data-c='{"graphic":"challenge","visible":true,"side":"away","status":"requested"}'>Azul pediu</button>
-      </div>
-      <div class="grid" style="margin-top:8px">
-        <button data-status="challenge">Em análise</button>
-        <button class="ok" data-status="won">Ganhou</button>
-        <button class="bad" data-status="lost">Perdeu</button>
-        <button data-status="canceled">Cancelado</button>
-        <button class="hide" data-c='{"graphic":"challenge","visible":false}'>Esconder</button>
-      </div>
-      <p class="hint">Fluxo da transmissão: pediu → em análise → ganhou/perdeu → esconder.</p>
-    </section>
-
-    <section>
-      <h2>Atendimento <span class="live-tag off" id="tag-injury">fora</span></h2>
-      <div class="grid">
-        <button class="home" data-c='{"graphic":"injury","visible":true,"side":"home","kind":"blood"}'>Vermelho · sangue</button>
-        <button class="home" data-c='{"graphic":"injury","visible":true,"side":"home","kind":"injury"}'>Vermelho · lesão</button>
-        <button class="away" data-c='{"graphic":"injury","visible":true,"side":"away","kind":"blood"}'>Azul · sangue</button>
-        <button class="away" data-c='{"graphic":"injury","visible":true,"side":"away","kind":"injury"}'>Azul · lesão</button>
-        <button class="hide" data-c='{"graphic":"injury","visible":false}'>Encerrar</button>
-      </div>
-      <p class="hint">Cronômetro com o tempo de atendimento do Arena (<span id="injury-time">4:00</span>).</p>
-    </section>
-
-    <section>
-      <h2>Passividade <span class="live-tag off" id="tag-passivity">fora</span></h2>
-      <div class="grid">
-        <button class="home" data-c='{"graphic":"passivity","visible":true,"side":"home"}'>Vermelho</button>
-        <button class="away" data-c='{"graphic":"passivity","visible":true,"side":"away"}'>Azul</button>
-        <button class="hide" data-c='{"graphic":"passivity","visible":false}'>Encerrar</button>
-      </div>
-      <p class="hint">Período de atividade (<span id="activity-time">30</span> s), contado no placar.</p>
-    </section>
-
-    <section>
-      <h2>Vitória <span class="live-tag off" id="tag-victory">fora</span></h2>
-      <select id="victory-type"><option value="">Tipo de vitória…</option></select>
-      <div class="grid">
-        <button class="home gold" data-victory="home">Vermelho venceu</button>
-        <button class="away gold" data-victory="away">Azul venceu</button>
-        <button class="hide" data-c='{"graphic":"victory","visible":false}'>Esconder</button>
-      </div>
-    </section>
-
-    <section>
-      <div class="grid"><button class="hide" data-c='{"graphic":"all","visible":false}'>Limpar todos os gráficos <kbd>Esc</kbd></button></div>
-      <p class="hint">Ao carregar uma nova luta no UWW Timing, os gráficos da luta anterior saem sozinhos.</p>
-    </section>
+<main class="page">
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">Controle do operador</div>
+      <h1 id="title">Tapete –</h1>
+      <p id="subtitle">&nbsp;</p>
+    </div>
+    <div class="shortcuts">
+      <span><span class="kbd">I</span> apresentação</span>
+      <span><span class="kbd">Esc</span> limpar gráficos</span>
+    </div>
   </div>
 
-  <div class="preview">
-    <div class="frame" id="frame"><iframe id="preview" title="Prévia do overlay"></iframe></div>
-    <p class="hint">Prévia ao vivo — mesma URL do Browser Source: <code id="overlay-url"></code></p>
+  <div class="layout">
+    <div class="stack">
+      <!-- luta ao vivo -->
+      <section class="card hero" aria-label="Luta atual">
+        <div class="mat-letter" id="mat-letter">–</div>
+        <div class="vs" id="vs"><div class="skeleton" style="height:64px"></div></div>
+        <div class="right">
+          <span id="source"></span>
+          <span class="clock" id="clock">–:––</span>
+          <span class="meta" id="meta"></span>
+        </div>
+      </section>
+
+      <div class="controls">
+        <!-- placar -->
+        <section class="card">
+          <div class="card-head"><span class="icon" id="i-layout"></span><h3>Placar neste tapete</h3><span class="state" id="st-layout"></span></div>
+          <div class="card-body">
+            <div class="seg" role="radiogroup" aria-label="Modo do placar">
+              <label><input type="radio" name="layout" value="auto"><span>Padrão</span></label>
+              <label><input type="radio" name="layout" value="expanded"><span>Expandido</span></label>
+              <label><input type="radio" name="layout" value="collapsed"><span>Recolhido</span></label>
+            </div>
+            <p class="help" style="margin-top:10px">"Padrão" segue as <a href="/settings.html">configurações</a>. Os outros fixam o modo só neste tapete.</p>
+          </div>
+        </section>
+
+        <!-- apresentação -->
+        <section class="card">
+          <div class="card-head"><span class="icon" id="i-intro"></span><h3>Apresentação da luta</h3><span class="state" id="st-intro"></span></div>
+          <div class="card-body">
+            <div class="btns">
+              <button class="btn ok" data-c='{"graphic":"intro","visible":true}'>Mostrar</button>
+              <button class="btn ghost" data-c='{"graphic":"intro","visible":false}'>Esconder</button>
+            </div>
+            <p class="help" style="margin-top:10px">Com o UWW Timing conectado, entra ao carregar a luta e sai quando ela fica pronta.</p>
+          </div>
+        </section>
+
+        <!-- challenge -->
+        <section class="card wide">
+          <div class="card-head"><span class="icon" id="i-challenge"></span><h3>Challenge</h3><span class="state" id="st-challenge"></span></div>
+          <div class="card-body">
+            <div class="step">1 · Quem pediu</div>
+            <div class="btns">
+              <button class="btn home" data-c='{"graphic":"challenge","visible":true,"side":"home","status":"requested"}'>Vermelho pediu</button>
+              <button class="btn away" data-c='{"graphic":"challenge","visible":true,"side":"away","status":"requested"}'>Azul pediu</button>
+            </div>
+            <div class="step">2 · Andamento e resultado</div>
+            <div class="btns">
+              <button class="btn" data-status="challenge">Em análise</button>
+              <button class="btn ok" data-status="won">Ganhou</button>
+              <button class="btn bad" data-status="lost">Perdeu</button>
+              <button class="btn" data-status="canceled">Cancelado</button>
+              <button class="btn ghost" data-c='{"graphic":"challenge","visible":false}'>Esconder</button>
+            </div>
+          </div>
+        </section>
+
+        <!-- atendimento -->
+        <section class="card">
+          <div class="card-head"><span class="icon" id="i-injury"></span><h3>Atendimento</h3><span class="state" id="st-injury"></span></div>
+          <div class="card-body">
+            <div class="btns">
+              <button class="btn home" data-c='{"graphic":"injury","visible":true,"side":"home","kind":"blood"}'>Vermelho · sangue</button>
+              <button class="btn away" data-c='{"graphic":"injury","visible":true,"side":"away","kind":"blood"}'>Azul · sangue</button>
+              <button class="btn home" data-c='{"graphic":"injury","visible":true,"side":"home","kind":"injury"}'>Vermelho · lesão</button>
+              <button class="btn away" data-c='{"graphic":"injury","visible":true,"side":"away","kind":"injury"}'>Azul · lesão</button>
+            </div>
+            <div class="btns"><button class="btn ghost" data-c='{"graphic":"injury","visible":false}'>Encerrar</button></div>
+            <p class="help" style="margin-top:10px">Tempo de atendimento: <b id="injury-time">4:00</b>.</p>
+          </div>
+        </section>
+
+        <!-- passividade -->
+        <section class="card">
+          <div class="card-head"><span class="icon" id="i-passivity"></span><h3>Passividade</h3><span class="state" id="st-passivity"></span></div>
+          <div class="card-body">
+            <div class="btns">
+              <button class="btn home" data-c='{"graphic":"passivity","visible":true,"side":"home"}'>Vermelho</button>
+              <button class="btn away" data-c='{"graphic":"passivity","visible":true,"side":"away"}'>Azul</button>
+            </div>
+            <div class="btns"><button class="btn ghost" data-c='{"graphic":"passivity","visible":false}'>Encerrar</button></div>
+            <p class="help" style="margin-top:10px">Período de atividade: <b id="activity-time">30</b> s.</p>
+          </div>
+        </section>
+
+        <!-- vitória -->
+        <section class="card wide">
+          <div class="card-head"><span class="icon" id="i-victory"></span><h3>Vitória</h3><span class="state" id="st-victory"></span></div>
+          <div class="card-body">
+            <div class="row">
+              <label class="sr-only" for="victory-type">Tipo de vitória</label>
+              <select class="input" id="victory-type" style="max-width:340px"><option value="">Tipo de vitória…</option></select>
+              <button class="btn home gold" data-victory="home">Vermelho venceu</button>
+              <button class="btn away gold" data-victory="away">Azul venceu</button>
+              <button class="btn ghost" data-c='{"graphic":"victory","visible":false}'>Esconder</button>
+            </div>
+          </div>
+        </section>
+      </div>
+
+      <div class="card card-pad row">
+        <div><b>Limpar todos os gráficos</b><div class="help">Tira apresentação, challenge, atendimento, passividade e vitória do ar. Ao carregar uma nova luta no Timing, isso acontece sozinho.</div></div>
+        <span class="spacer"></span>
+        <button class="btn bad" data-c='{"graphic":"all","visible":false}' id="clear-btn">Limpar <span class="kbd">Esc</span></button>
+      </div>
+    </div>
+
+    <!-- prévia -->
+    <aside class="aside">
+      <section class="card">
+        <div class="card-head"><span class="icon" id="i-tv"></span><h3>Prévia ao vivo</h3><span class="state"><span class="badge ok live"><span class="dot"></span>no ar</span></span></div>
+        <div class="card-body stack">
+          <div class="preview-frame" id="frame"><iframe id="preview" title="Prévia do overlay"></iframe></div>
+          <div>
+            <div class="help" style="margin-bottom:6px">Link para o OBS/vMix (Browser Source 1920×1080)</div>
+            <div class="url-row">
+              <input class="input" id="overlay-url" readonly aria-label="Link do overlay">
+              <button class="btn icon-btn" id="copy-url" title="Copiar" aria-label="Copiar link"></button>
+              <a class="btn icon-btn" id="open-url" target="_blank" rel="noopener" title="Abrir" aria-label="Abrir overlay"></a>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="card">
+        <div class="card-head"><span class="icon" id="i-onair"></span><h3>No ar agora</h3></div>
+        <div class="card-body"><div class="onair-list" id="onair"></div></div>
+      </section>
+    </aside>
   </div>
 </main>
-<div class="toast" id="toast"></div>
 
-<script>
+<script type="module">
+import { mountHeader, esc, flagURL, icon, toast, copyText, matView } from '/ui.js';
+mountHeader('mats');
+
 const params = new URLSearchParams(location.search);
 const eventId = params.get('event'), mat = params.get('mat');
 const $ = (id) => document.getElementById(id);
 let current = null;
 
-const overlayUrl = `/overlay.html?event=${encodeURIComponent(eventId)}&mat=${encodeURIComponent(mat)}`;
-$('preview').src = overlayUrl;
-$('overlay-url').textContent = location.origin + overlayUrl;
-$('mat').textContent = mat;
+// ícones dos cartões
+for (const [id, name] of Object.entries({ 'i-layout': 'layout', 'i-intro': 'play', 'i-challenge': 'flag', 'i-injury': 'drop', 'i-passivity': 'timer', 'i-victory': 'trophy', 'i-tv': 'tv', 'i-onair': 'radio' })) $(id).innerHTML = icon(name);
+$('copy-url').innerHTML = icon('copy');
+$('open-url').innerHTML = icon('external');
 
-function fit() { const f = $('frame'); $('preview').style.transform = `scale(${f.clientWidth / 1920})`; }
-addEventListener('resize', fit); fit();
+const overlayPath = `/overlay.html?event=${encodeURIComponent(eventId)}&mat=${encodeURIComponent(mat)}`;
+$('preview').src = overlayPath;
+$('overlay-url').value = location.origin + overlayPath;
+$('open-url').href = overlayPath;
+$('copy-url').onclick = () => copyText(location.origin + overlayPath);
+$('mat-letter').textContent = mat;
+$('title').textContent = `Tapete ${mat}`;
+document.title = `CBW Live — Controle · Tapete ${mat}`;
 
-function toast(msg) { const t = $('toast'); t.textContent = msg; t.classList.add('show'); setTimeout(() => t.classList.remove('show'), 2500); }
+const fit = () => { $('preview').style.transform = `scale(${$('frame').clientWidth / 1920})`; };
+new ResizeObserver(fit).observe($('frame'));
 
-async function send(c) {
-  const r = await fetch(`/api/control/${encodeURIComponent(eventId)}/${encodeURIComponent(mat)}`, {
-    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c),
-  });
-  if (!r.ok) { toast(await r.text()); return; }
-  update(await r.json());
+const SIDE = { home: 'vermelho', away: 'azul' };
+const STATUS = { requested: 'pedido', challenge: 'em análise', won: 'ganhou', lost: 'perdeu', canceled: 'cancelado' };
+const LABEL = { intro: 'Apresentação', challenge: 'Challenge', injury: 'Atendimento', passivity: 'Passividade', victory: 'Vitória' };
+
+function stateBadge(c, g) {
+  if (!c) return '<span class="badge">fora do ar</span>';
+  const bits = [c.side && SIDE[c.side], g === 'challenge' && STATUS[c.status], g === 'injury' && (c.kind === 'injury' ? 'lesão' : 'sangue'), c.time, c.paused && 'pausado'].filter(Boolean);
+  const cls = c.side === 'home' ? 'home' : c.side === 'away' ? 'away' : 'brand';
+  return `<span class="badge ${cls} live"><span class="dot"></span>${esc(['no ar', ...bits].join(' · '))}</span>${c.auto ? ' <span class="badge info" title="Acionado pelo UWW Timing">auto</span>' : ''}`;
+}
+
+function renderHero(st) {
+  const v = matView(st);
+  const side = (a, s) => `<div class="side"><span class="side-bar ${s}"></span>
+      <div class="athlete"><img class="flag lg" src="${flagURL(a.country)}" alt="" onerror="this.style.visibility='hidden'">
+        <div style="min-width:0"><div class="name">${esc(a.name || '—')}</div><div class="cty">${esc(a.country)}</div></div></div>
+      ${a.cautions ? `<span class="cards" title="${a.cautions} falta(s)">${'<i></i>'.repeat(a.cautions)}</span>` : ''}
+      <span class="score">${esc(a.score)}</span></div>`;
+  $('vs').innerHTML = v.hasFight ? side(v.home, 'home') + side(v.away, 'away') : `<div class="muted">Nenhuma luta carregada neste tapete.</div>`;
+  $('clock').textContent = v.time || '–:––';
+  $('clock').className = `clock ${v.running ? 'running' : ''}`;
+  $('meta').textContent = [v.category, v.round, v.matchNo && `Luta ${v.matchNo}`].filter(Boolean).join(' · ');
+  $('source').innerHTML = v.timing
+    ? `<span class="badge ok live"><span class="dot"></span>UWW Timing direto</span>`
+    : v.liveRecent ? `<span class="badge info live"><span class="dot"></span>Ao vivo (Mercure)</span>` : `<span class="badge">Sem sinal da mesa</span>`;
+  $('subtitle').textContent = [st.eventName, st.eventCity].filter(Boolean).join(' · ');
 }
 
 function update(st) {
   current = st;
+  renderHero(st);
   const f = st.fight || {};
-  const fight = $('fight');
-  fight.replaceChildren();
-  if (f.id) {
-    const h = document.createElement('b'); h.className = 'home'; h.textContent = f.fighter1DisplayName || f.fighter1FullName;
-    const a = document.createElement('b'); a.className = 'away'; a.textContent = f.fighter2DisplayName || f.fighter2FullName;
-    fight.append(h, ' × ', a, ` — ${f.weightCategoryName ?? ''} · ${f.roundFriendlyName ?? ''} · Luta ${f.fightNumber ?? ''}`);
-  } else fight.textContent = 'nenhuma luta aberta neste tapete';
   if (f.injuryTime) $('injury-time').textContent = `${Math.floor(f.injuryTime / 60)}:${String(f.injuryTime % 60).padStart(2, '0')}`;
   if (f.activityTime) $('activity-time').textContent = f.activityTime;
 
   const sel = $('victory-type');
-  const types = (f.victoryTypesArray || []).map((v) => v.name).filter(Boolean);
-  if (sel.dataset.fight !== f.id) {
+  if (sel.dataset.fight !== (f.id || '')) {
     sel.dataset.fight = f.id || '';
+    const types = (f.victoryTypesArray || []).map((v) => v.name).filter(Boolean);
     sel.replaceChildren(new Option('Tipo de vitória…', ''), ...types.map((n) => new Option(n, n)));
   }
 
   const ctl = st.control || {};
   const lay = ctl.layout?.status || 'auto';
-  $('tag-layout').textContent = { auto: 'padrão', expanded: 'expandido', collapsed: 'recolhido' }[lay];
-  document.querySelectorAll('[data-layout]').forEach((b) => b.classList.toggle('active', b.dataset.layout === lay));
-  for (const g of ['intro', 'challenge', 'injury', 'passivity', 'victory']) {
-    const tag = $(`tag-${g}`), on = ctl[g];
-    tag.classList.toggle('off', !on);
-    tag.textContent = !on ? 'fora' : [on.side === 'home' ? 'vermelho' : on.side === 'away' ? 'azul' : 'no ar', on.status, on.kind].filter(Boolean).join(' · ');
-  }
+  document.querySelectorAll('input[name=layout]').forEach((r) => { r.checked = r.value === lay; });
+  $('st-layout').innerHTML = `<span class="badge ${lay === 'auto' ? '' : 'brand'}">${{ auto: 'padrão', expanded: 'expandido', collapsed: 'recolhido' }[lay]}</span>`;
+  for (const g of Object.keys(LABEL)) $(`st-${g}`).innerHTML = stateBadge(ctl[g], g);
+
+  const on = Object.keys(LABEL).filter((g) => ctl[g]);
+  $('onair').innerHTML = on.length
+    ? on.map((g) => `<div class="onair-item"><span class="what">${LABEL[g]}</span>${stateBadge(ctl[g], g)}</div>`).join('')
+    : `<div class="empty" style="padding:14px">${icon('radio')}<div>Só o placar está no ar.</div></div>`;
+}
+
+async function send(c) {
+  const r = await fetch(`/api/control/${encodeURIComponent(eventId)}/${encodeURIComponent(mat)}`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(c),
+  });
+  if (!r.ok) { toast(await r.text(), 'bad'); return; }
+  update(await r.json());
 }
 
 document.addEventListener('click', (e) => {
@@ -188,28 +295,33 @@ document.addEventListener('click', (e) => {
   if (b.dataset.c) return send(JSON.parse(b.dataset.c));
   if (b.dataset.status) {
     const ch = current?.control?.challenge;
-    if (!ch) return toast('Escolha primeiro quem pediu o challenge');
+    if (!ch) return toast('Escolha primeiro quem pediu o challenge', 'bad');
     return send({ graphic: 'challenge', visible: true, side: ch.side, status: b.dataset.status });
   }
-  if (b.dataset.layout) return send(b.dataset.layout === 'auto'
-    ? { graphic: 'layout', visible: false }
-    : { graphic: 'layout', visible: true, status: b.dataset.layout });
   if (b.dataset.victory) return send({ graphic: 'victory', visible: true, side: b.dataset.victory, victoryType: $('victory-type').value });
 });
+document.querySelectorAll('input[name=layout]').forEach((r) => r.addEventListener('change', () => send(r.value === 'auto'
+  ? { graphic: 'layout', visible: false }
+  : { graphic: 'layout', visible: true, status: r.value })));
 
 document.addEventListener('keydown', (e) => {
-  if (e.target.tagName === 'SELECT') return;
+  if (['SELECT', 'INPUT', 'TEXTAREA'].includes(e.target.tagName)) return;
   if (e.key === 'Escape') send({ graphic: 'all', visible: false });
   if (e.key === 'i' || e.key === 'I') send({ graphic: 'intro', visible: !current?.control?.intro });
 });
 
 async function load() {
-  const r = await fetch(`/api/state/${encodeURIComponent(eventId)}/${encodeURIComponent(mat)}`);
+  const r = await fetch(`/api/state/${encodeURIComponent(eventId)}/${encodeURIComponent(mat)}`, { cache: 'no-store' });
   if (r.ok) update(await r.json());
+  else $('vs').innerHTML = '<div class="muted">Tapete não encontrado. Volte à lista de tapetes.</div>';
 }
-// mantém o painel em sincronia com outros operadores e com trocas de luta
+// tempo real: snapshot/controles e também as mensagens ao vivo (placar e cronômetro)
 const es = new EventSource(`/hub?topic=${encodeURIComponent(`cbw/live/${eventId}/${mat}`)}`);
-es.onmessage = (e) => { const m = JSON.parse(e.data); if (m.state) update(m.state); };
+es.onmessage = (e) => {
+  const m = JSON.parse(e.data);
+  if (m.state) update(m.state);
+  else if (m.type === 'live' && current) { current = { ...current, live: m.live, liveAt: new Date().toISOString() }; renderHero(current); }
+};
 es.onopen = load;
 load();
 </script>

@@ -33,9 +33,11 @@ type Syncer struct {
 	// tapetes com o UWW Timing conectado direto (contagem por tapete)
 	tmu        sync.Mutex
 	timingKeys map[string]int
-	mu         sync.Mutex
-	mats       map[string]arena.Mat // key -> mat
-	subs       map[string]context.CancelFunc
+	// última vez que pedimos o snapshot por divergência de luta (limita a 1 a cada 5 s por tapete)
+	snapAsked map[string]time.Time
+	mu        sync.Mutex
+	mats      map[string]arena.Mat // key -> mat
+	subs      map[string]context.CancelFunc
 }
 
 type message struct {
@@ -49,6 +51,7 @@ func NewSyncer(a *arena.Client, hub *mercure.Hub, store *Store, eventID string, 
 		Arena: a, Hub: hub, Store: store, EventID: eventID, Resync: resync, LiveLog: liveLog,
 		trigger:    make(chan struct{}, 1),
 		timingKeys: map[string]int{},
+		snapAsked:  map[string]time.Time{},
 		mats:       map[string]arena.Mat{},
 		subs:       map[string]context.CancelFunc{},
 	}
@@ -238,7 +241,7 @@ func (s *Syncer) ingestLive(ctx context.Context, eventID, matName string, data j
 	key := Key(eventID, matName)
 	var lm liveMessage
 	json.Unmarshal(data, &lm)
-	fightChanged := false
+	fightChanged, needSnapshot := false, false
 	state, _ := s.Store.Update(key, func(m *MatState) bool {
 		m.Live, m.LiveAt = data, &now
 		if lm.Message.ID != "" && lm.Message.ID != m.LiveFightID {
@@ -246,6 +249,9 @@ func (s *Syncer) ingestLive(ctx context.Context, eventID, matName string, data j
 			m.LiveFightID, fightChanged = lm.Message.ID, m.LiveFightID != ""
 			clearGraphics(m)
 		}
+		// o snapshot (nomes completos, bandeiras, cores) ainda é de outra luta:
+		// busca no Arena já, sem esperar a ressincronização periódica
+		needSnapshot = lm.Message.ID != "" && fightIDOf(m.Fight) != lm.Message.ID
 		if s.autoFromLive(m, lm, now) {
 			fightChanged = true // força publicar os controles
 		}
@@ -254,8 +260,18 @@ func (s *Syncer) ingestLive(ctx context.Context, eventID, matName string, data j
 	s.publish(ctx, eventID, matName, message{Type: "live", Live: data})
 	if fightChanged {
 		s.publish(ctx, eventID, matName, message{Type: "control", State: &state})
-		// atualiza o snapshot (atletas, categoria, cores)
-		s.Trigger()
+	}
+	if needSnapshot && !fightChanged {
+		s.tmu.Lock()
+		if now.Sub(s.snapAsked[key]) < 5*time.Second {
+			needSnapshot = false
+		} else {
+			s.snapAsked[key] = now
+		}
+		s.tmu.Unlock()
+	}
+	if fightChanged || needSnapshot {
+		s.Trigger() // atualiza o snapshot (atletas, categoria, cores)
 	}
 }
 

@@ -4,52 +4,65 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CBW Live — Galeria de estados</title>
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/ui.css">
 <style>
-  :root { --bg: #0e1117; --panel: #171b24; --line: #2a3040; --text: #e8ebf2; --muted: #8a93a6; --accent: #4fd1c5; }
-  * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font: 15px/1.4 system-ui, sans-serif; }
-  header { position: sticky; top: 0; z-index: 2; display: flex; flex-wrap: wrap; align-items: center; gap: 16px;
-           padding: 12px 20px; background: rgba(14,17,23,.95); border-bottom: 1px solid var(--line); }
-  header h1 { font-size: 18px; margin: 0; }
-  header a { color: var(--accent); font-size: 14px; }
-  header label { color: var(--muted); font-size: 13px; display: flex; gap: 6px; align-items: center; }
-  header select { background: #222838; color: var(--text); border: 1px solid var(--line); border-radius: 6px; padding: 5px 8px; font: inherit; }
-  main { padding: 16px 20px 40px; }
-  h2 { font-size: 13px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); margin: 22px 0 10px; }
-  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); gap: 14px; }
-  .card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; overflow: hidden; }
-  .card header { position: static; padding: 8px 12px; background: none; border-bottom: 1px solid var(--line); justify-content: space-between; gap: 8px; }
-  .card header span { font-weight: 600; font-size: 14px; }
-  .card header div { display: flex; gap: 6px; }
-  .card button, .card a.open { appearance: none; border: 1px solid var(--line); background: #222838; color: var(--text); border-radius: 5px;
-           padding: 3px 9px; font: inherit; font-size: 12px; cursor: pointer; text-decoration: none; }
+  .toolbar { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; padding: 12px 14px; margin-bottom: 8px; }
+  .toolbar .group { display: flex; align-items: center; gap: 8px; color: var(--muted); font-size: 13px; }
+  .chips { display: flex; gap: 6px; flex-wrap: wrap; }
+  .chip {
+    appearance: none; border: 1px solid var(--line); background: transparent; color: var(--muted);
+    padding: 6px 12px; border-radius: 999px; font: 600 13px var(--font); cursor: pointer;
+  }
+  .chip:hover { color: var(--text); }
+  .chip[aria-pressed="true"] { background: var(--brand); border-color: var(--brand); color: var(--brand-ink); }
+  .chip .n { opacity: .7; margin-left: 4px; font-weight: 500; }
+  .grid.scenes { grid-template-columns: repeat(auto-fill, minmax(420px, 1fr)); }
+  @media (max-width: 520px) { .grid.scenes { grid-template-columns: 1fr; } }
+  .scene { overflow: hidden; }
+  .scene .card-head h3 { flex: 1; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .view { position: relative; overflow: hidden; background: var(--scene); }
-  .view iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; pointer-events: none; }
-  .tag { font-size: 11px; color: var(--muted); }
+  .view iframe { position: absolute; left: 0; top: 0; width: 1920px; height: 1080px; border: 0; transform-origin: 0 0; pointer-events: none; color-scheme: normal; }
+  /* color-scheme igual ao do overlay: senão o Chrome pinta o fundo do iframe (transparente) de branco */
+  .scene-foot { display: flex; align-items: center; gap: 8px; padding: 10px 16px; color: var(--faint); font-size: 12.5px; }
   body[data-bg="mat"] { --scene: radial-gradient(ellipse at 60% 70%, #2b63c9 0%, #1d3f8a 55%, #0f2350 100%); }
-  body[data-bg="dark"] { --scene: #111; }
+  body[data-bg="dark"] { --scene: #0c0f14; }
   body[data-bg="light"] { --scene: #d9dde5; }
-  body[data-bg="check"] { --scene: repeating-conic-gradient(#20242e 0% 25%, #191c24 0% 50%) 50% / 24px 24px; }
+  body[data-bg="check"] { --scene: repeating-conic-gradient(#1a2547 0% 25%, #121a35 0% 50%) 50% / 22px 22px; }
 </style>
 </head>
 <body data-bg="mat">
-<header>
-  <h1>CBW Live — Galeria de estados</h1>
-  <a href="/">← tapetes</a>
-  <a href="/settings.html">⚙ configurações</a>
-  <label>Fundo
-    <select id="bg">
-      <option value="mat">tapete</option><option value="dark">escuro</option><option value="light">claro</option><option value="check">xadrez (transparência)</option>
-    </select>
-  </label>
-  <label>Configurações
-    <select id="cfg"><option value="live">as salvas</option><option value="default">padrão</option></select>
-  </label>
-</header>
-<main id="main"></main>
+<header id="app-header"></header>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">Galeria de estados</div>
+      <h1>Todos os gráficos, sem precisar de luta</h1>
+      <p>Dados fictícios — ideal para revisar o visual, treinar operadores e testar o OBS/vMix antes do evento.</p>
+    </div>
+  </div>
+
+  <div class="card toolbar">
+    <div class="chips" id="chips" role="toolbar" aria-label="Filtrar por grupo"></div>
+    <span class="spacer"></span>
+    <label class="group">Fundo
+      <select class="input" id="bg" style="width:auto;min-height:34px">
+        <option value="mat">Tapete</option><option value="dark">Escuro</option><option value="light">Claro</option><option value="check">Xadrez (transparência)</option>
+      </select>
+    </label>
+    <label class="group">Configurações
+      <select class="input" id="cfg" style="width:auto;min-height:34px"><option value="live">As salvas</option><option value="default">Padrão</option></select>
+    </label>
+  </div>
+
+  <div id="main"></div>
+</main>
 
 <script type="module">
 import { SCENARIOS } from '/mocks.js';
+import { mountHeader, icon, esc } from '/ui.js';
+mountHeader('gallery');
 
 // Recorte de cada tipo de cena no quadro 1920×1080 (x, y, largura, altura)
 const REGIONS = {
@@ -65,43 +78,63 @@ const regionFor = (name, sc) => {
 const main = document.getElementById('main');
 const cfgSel = document.getElementById('cfg');
 const bgSel = document.getElementById('bg');
+const chips = document.getElementById('chips');
 try { bgSel.value = localStorage.getItem('preview-bg') || 'mat'; } catch {}
 document.body.dataset.bg = bgSel.value;
 bgSel.onchange = () => { document.body.dataset.bg = bgSel.value; try { localStorage.setItem('preview-bg', bgSel.value); } catch {} };
 
-function src(name) {
-  return `/overlay.html?mock=${encodeURIComponent(name)}${cfgSel.value === 'default' ? '&settings=default' : ''}`;
+const groups = {};
+for (const [name, sc] of Object.entries(SCENARIOS)) (groups[sc.group] ||= []).push([name, sc]);
+let filter = 'Todos';
+
+function renderChips() {
+  const all = Object.keys(SCENARIOS).length;
+  chips.innerHTML = [['Todos', all], ...Object.entries(groups).map(([g, items]) => [g, items.length])]
+    .map(([g, n]) => `<button class="chip" aria-pressed="${g === filter}" data-g="${esc(g)}">${esc(g)}<span class="n">${n}</span></button>`).join('');
 }
+chips.addEventListener('click', (e) => {
+  const c = e.target.closest('[data-g]'); if (!c) return;
+  filter = c.dataset.g; renderChips(); render();
+});
+
+// bg=transparent: a galeria mostra o gráfico sobre o "Fundo" escolhido aqui,
+// mesmo que o overlay esteja configurado com chroma verde/azul.
+const src = (name) => `/overlay.html?mock=${encodeURIComponent(name)}&bg=transparent${cfgSel.value === 'default' ? '&settings=default' : ''}`;
 
 function render() {
   main.replaceChildren();
-  const groups = {};
-  for (const [name, sc] of Object.entries(SCENARIOS)) (groups[sc.group] ||= []).push([name, sc]);
   for (const [group, items] of Object.entries(groups)) {
-    const h = document.createElement('h2'); h.textContent = group; main.append(h);
-    const grid = document.createElement('div'); grid.className = 'grid'; main.append(grid);
+    if (filter !== 'Todos' && filter !== group) continue;
+    const title = document.createElement('div');
+    title.className = 'section-title';
+    title.innerHTML = `<h2>${esc(group)}</h2><span>${items.length} cena(s)</span>`;
+    const grid = document.createElement('div');
+    grid.className = 'grid scenes';
+    main.append(title, grid);
+
     for (const [name, sc] of items) {
-      const [x, y, w, hgt] = regionFor(name, sc);
-      const card = document.createElement('div'); card.className = 'card';
-      const head = document.createElement('header');
-      const title = document.createElement('span'); title.textContent = sc.title;
-      const actions = document.createElement('div');
-      const replay = document.createElement('button'); replay.textContent = '↻ animar';
-      const open = document.createElement('a'); open.className = 'open'; open.textContent = 'tela cheia'; open.target = '_blank'; open.href = src(name);
-      actions.append(replay, open); head.append(title, actions);
-      const view = document.createElement('div'); view.className = 'view'; view.style.aspectRatio = `${w} / ${hgt}`;
-      const iframe = document.createElement('iframe'); iframe.loading = 'lazy'; iframe.src = src(name); iframe.title = sc.title;
-      view.append(iframe);
-      const fit = () => { const k = view.clientWidth / w; iframe.style.transform = `scale(${k}) translate(${-x}px, ${-y}px)`; };
+      const [x, y, w, h] = regionFor(name, sc);
+      const card = document.createElement('article');
+      card.className = 'card scene';
+      card.innerHTML = `
+        <div class="card-head"><h3>${esc(sc.title)}</h3>
+          <button class="btn sm ghost" data-replay>${icon('refresh')} Animar</button>
+          <a class="btn sm" href="${src(name)}" target="_blank" rel="noopener">${icon('external')} Tela cheia</a>
+        </div>
+        <div class="view" style="aspect-ratio:${w} / ${h}"><iframe loading="lazy" title="${esc(sc.title)}"></iframe></div>
+        <div class="scene-foot">${sc.steps ? `<span class="badge brand">animação em ciclo</span>` : ''}<code>?mock=${esc(name)}</code></div>`;
+      const view = card.querySelector('.view');
+      const iframe = card.querySelector('iframe');
+      iframe.src = src(name);
+      const fit = () => { iframe.style.transform = `scale(${view.clientWidth / w}) translate(${-x}px, ${-y}px)`; };
       new ResizeObserver(fit).observe(view);
-      replay.onclick = () => { iframe.src = src(name); };
-      const tag = document.createElement('div'); tag.className = 'tag'; tag.style.padding = '6px 12px'; tag.textContent = sc.steps ? 'animação em ciclo' : `?mock=${name}`;
-      card.append(head, view, tag);
+      card.querySelector('[data-replay]').onclick = () => { iframe.src = src(name); };
       grid.append(card);
     }
   }
 }
 cfgSel.onchange = render;
+renderChips();
 render();
 </script>
 </body>

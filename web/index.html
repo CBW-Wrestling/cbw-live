@@ -4,42 +4,168 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>CBW Live — Tapetes</title>
+<link rel="icon" href="/assets/logo.svg">
+<link rel="stylesheet" href="/ui.css">
 <style>
-  body { font: 15px/1.4 system-ui, sans-serif; margin: 24px; background: #111; color: #eee; }
-  h1 { font-size: 20px; }
-  table { border-collapse: collapse; width: 100%; max-width: 960px; }
-  th, td { text-align: left; padding: 8px 10px; border-bottom: 1px solid #333; }
-  a { color: #4fd1c5; }
-  .muted { color: #888; }
+  .stats { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  @media (max-width: 900px) { .stats { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+
+  .mat { display: flex; flex-direction: column; overflow: hidden; transition: border-color .2s; }
+  .mat:hover { border-color: var(--line-strong); }
+  .mat.is-live { border-color: rgba(43, 182, 115, .45); }
+  .mat-top { display: flex; align-items: center; gap: 12px; padding: 14px 16px 10px; }
+  .mat-letter {
+    width: 44px; height: 44px; border-radius: 12px; display: grid; place-items: center;
+    background: var(--brand); color: var(--brand-ink); font-weight: 850; font-size: 22px; flex: none;
+  }
+  .mat-top .meta { min-width: 0; }
+  .mat-top .meta b { display: block; font-size: 13.5px; }
+  .mat-top .meta span { color: var(--muted); font-size: 12.5px; }
+  .mat-top .badges { margin-left: auto; display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .badge svg { width: 11px; height: 11px; }
+
+  .fight { margin: 4px 16px 0; border: 1px solid var(--line); border-radius: 11px; background: rgba(5, 9, 22, .45); overflow: hidden; }
+  .fight-row { display: flex; align-items: center; gap: 10px; padding: 9px 12px 9px 0; }
+  .fight-row + .fight-row { border-top: 1px solid var(--line); }
+  .fight-row .athlete { flex: 1; }
+  .cards { display: flex; gap: 3px; }
+  .cards i { width: 7px; height: 11px; border-radius: 2px; background: #ffcc00; }
+  .fight-foot { display: flex; align-items: center; gap: 10px; padding: 10px 16px 0; color: var(--muted); font-size: 12.5px; }
+  .fight-foot .clock { margin-left: auto; font-size: 20px; color: var(--text); }
+  .fight-foot .clock.running { color: #6ee7a8; }
+  .mat .empty { margin: 4px 16px 0; border: 1px dashed var(--line-strong); border-radius: 11px; padding: 22px 10px; }
+  .on-air { display: flex; gap: 6px; flex-wrap: wrap; padding: 10px 16px 0; min-height: 10px; }
+  .mat-actions { display: flex; gap: 8px; padding: 14px 16px 16px; margin-top: auto; }
+  .mat-actions .btn:not(.icon-btn) { flex: 1; }
 </style>
 </head>
 <body>
-<h1>CBW Live — tapetes <a href="/settings.html" style="font-size:14px;margin-left:12px">⚙ configurações</a> <a href="/preview.html" style="font-size:14px;margin-left:12px">▦ galeria de estados</a></h1>
-<p class="muted">Use o link "overlay" como Browser Source no OBS/vMix (1920×1080, fundo transparente). Adicione <code>&amp;debug=1</code> para ver o payload bruto.</p>
-<table>
-  <thead><tr><th>Evento</th><th>Tapete</th><th>Lutas abertas</th><th>UWW Timing direto</th><th>Placar UWW ao vivo</th><th>Atualizado</th><th></th></tr></thead>
-  <tbody id="rows"><tr><td colspan="7" class="muted">carregando…</td></tr></tbody>
-</table>
-<script>
-async function load() {
-  const mats = await fetch('/api/state').then(r => r.json());
-  const rows = document.getElementById('rows');
-  rows.replaceChildren(...(mats.length ? mats.map(m => {
-    const tr = document.createElement('tr');
-    const url = `/overlay.html?event=${encodeURIComponent(m.eventId)}&mat=${encodeURIComponent(m.matName)}`;
-    const cells = [m.eventName, m.matName, String(m.openFights),
-      m.timingAddr ? `● ${m.timingAddr}` : '—',
-      m.liveAt ? new Date(m.liveAt).toLocaleTimeString() : '—',
-      new Date(m.updatedAt).toLocaleTimeString()];
-    for (const c of cells) { const td = document.createElement('td'); td.textContent = c; tr.append(td); }
-    const td = document.createElement('td');
-    const a = document.createElement('a'); a.href = url; a.textContent = 'overlay'; a.target = '_blank';
-    const c = document.createElement('a'); c.href = url.replace('/overlay.html', '/control.html'); c.textContent = 'controle'; c.target = '_blank';
-    td.append(a, ' · ', c); tr.append(td);
-    return tr;
-  }) : [Object.assign(document.createElement('tr'), { innerHTML: '<td colspan="7" class="muted">nenhum tapete ainda</td>' })]));
+<header id="app-header"></header>
+
+<main class="page">
+  <div class="page-head">
+    <div>
+      <div class="eyebrow">Painel</div>
+      <h1>Tapetes ao vivo</h1>
+      <p>Cada tapete tem um overlay para o OBS/vMix e uma página de controle para o operador.</p>
+    </div>
+  </div>
+
+  <section class="grid stats" aria-label="Resumo">
+    <div class="card stat"><div class="label">Tapetes</div><div class="value" id="s-mats">–</div><div class="hint" id="s-events">&nbsp;</div></div>
+    <div class="card stat"><div class="label">Lutas carregadas</div><div class="value" id="s-fights">–</div><div class="hint">com atletas no placar</div></div>
+    <div class="card stat"><div class="label">Cronômetro correndo</div><div class="value" id="s-running">–</div><div class="hint">lutas em andamento agora</div></div>
+    <div class="card stat"><div class="label">UWW Timing direto</div><div class="value" id="s-timing">–</div><div class="hint">PCs da mesa conectados</div></div>
+  </section>
+
+  <div id="events" aria-live="polite">
+    <div class="section-title"><h2>Carregando…</h2></div>
+    <div class="grid cols-auto"><div class="card skeleton" style="height:260px"></div><div class="card skeleton" style="height:260px"></div><div class="card skeleton" style="height:260px"></div></div>
+  </div>
+</main>
+
+<script type="module">
+import { mountHeader, esc, flagURL, icon, copyText, matView, toast } from '/ui.js';
+mountHeader('mats');
+
+const $ = (id) => document.getElementById(id);
+
+function athleteRow(a, side) {
+  const cards = a.cautions ? `<span class="cards" title="${a.cautions} falta(s)">${'<i></i>'.repeat(a.cautions)}</span>` : '';
+  return `<div class="fight-row">
+    <span class="side-bar ${side}"></span>
+    <div class="athlete">
+      <img class="flag" src="${flagURL(a.country)}" alt="" onerror="this.style.visibility='hidden'">
+      <div style="min-width:0"><div class="name">${esc(a.name || '—')}</div><div class="cty">${esc(a.country)}</div></div>
+    </div>
+    ${cards}
+    <span class="score">${esc(a.score)}</span>
+  </div>`;
 }
-load(); setInterval(load, 3000);
+
+const GRAPHIC_LABEL = { intro: 'Apresentação', challenge: 'Challenge', injury: 'Atendimento', passivity: 'Passividade', victory: 'Vitória' };
+
+function matCard(m) {
+  const v = matView(m);
+  const qs = `event=${encodeURIComponent(m.eventId)}&mat=${encodeURIComponent(m.matName)}`;
+  const overlay = `/overlay.html?${qs}`;
+  const source = v.timing
+    ? `<span class="badge ok live" title="UWW Timing conectado direto"><span class="dot"></span>Timing ${esc(v.timing.replace(/:9696$/, ''))}</span>`
+    : v.liveRecent
+      ? `<span class="badge info live"><span class="dot"></span>Ao vivo (Mercure)</span>`
+      : `<span class="badge"><span class="dot"></span>Sem sinal da mesa</span>`;
+  const status = v.running
+    ? `<span class="badge ok">${icon('play')} Em andamento</span>`
+    : v.hasFight ? `<span class="badge warn">Parado</span>` : '';
+  const onAir = Object.keys(v.control).filter((g) => GRAPHIC_LABEL[g])
+    .map((g) => `<span class="badge brand">${GRAPHIC_LABEL[g]}${v.control[g].auto ? ' · auto' : ''}</span>`).join('');
+
+  const body = v.hasFight ? `
+    <div class="fight">${athleteRow(v.home, 'home')}${athleteRow(v.away, 'away')}</div>
+    <div class="fight-foot">
+      <span>${esc([v.category, v.round, v.matchNo && `Luta ${v.matchNo}`].filter(Boolean).join(' · '))}</span>
+      <span class="clock ${v.running ? 'running' : ''}">${esc(v.time || '–:––')}</span>
+    </div>` : `<div class="empty">${icon('mat')}<div>Nenhuma luta carregada</div><div class="faint" style="font-size:12.5px">${m.openFights} luta(s) aberta(s) no Arena</div></div>`;
+
+  return `<article class="card mat ${v.running ? 'is-live' : ''}">
+    <div class="mat-top">
+      <div class="mat-letter" aria-label="Tapete ${esc(m.matName)}">${esc(m.matName)}</div>
+      <div class="meta"><b>Tapete ${esc(m.matName)}</b><span>${m.openFights} luta(s) aberta(s)</span></div>
+      <div class="badges">${source}${status}</div>
+    </div>
+    ${body}
+    <div class="on-air">${onAir}</div>
+    <div class="mat-actions">
+      <a class="btn" href="${overlay}" target="_blank" rel="noopener">${icon('tv')} Overlay</a>
+      <a class="btn primary" href="/control.html?${qs}" target="_blank" rel="noopener">${icon('sliders')} Controle</a>
+      <button class="btn icon-btn" data-copy="${esc(location.origin + overlay)}" title="Copiar link do overlay (OBS/vMix)" aria-label="Copiar link do overlay">${icon('copy')}</button>
+    </div>
+  </article>`;
+}
+
+function render(mats) {
+  const events = new Map();
+  for (const m of mats) {
+    if (!events.has(m.eventId)) events.set(m.eventId, { name: m.eventName, city: m.eventCity, mats: [] });
+    events.get(m.eventId).mats.push(m);
+  }
+  const views = mats.map(matView);
+  $('s-mats').textContent = mats.length;
+  $('s-events').textContent = `${events.size} evento(s)`;
+  $('s-fights').textContent = views.filter((v) => v.hasFight).length;
+  $('s-running').textContent = views.filter((v) => v.running).length;
+  $('s-timing').textContent = views.filter((v) => v.timing).length;
+
+  if (!mats.length) {
+    $('events').innerHTML = `<div class="card empty" style="margin-top:22px">${icon('mat')}<div>Nenhum tapete encontrado no Arena.</div><div class="faint">Confira as credenciais no .env e se o evento tem tapetes cadastrados.</div></div>`;
+    return;
+  }
+  // eventos com o Timing conectado / luta carregada primeiro
+  const ordered = [...events.values()].sort((a, b) =>
+    b.mats.filter((m) => matView(m).hasFight).length - a.mats.filter((m) => matView(m).hasFight).length);
+  $('events').innerHTML = ordered.map((ev) => `
+    <div class="section-title"><h2>${esc(ev.name)}</h2><span>${esc(ev.city || '')}</span></div>
+    <div class="grid cols-auto">${ev.mats.map(matCard).join('')}</div>`).join('');
+}
+
+document.addEventListener('click', (e) => {
+  const b = e.target.closest('[data-copy]');
+  if (b) copyText(b.dataset.copy);
+});
+
+let failed = false;
+async function load() {
+  try {
+    const r = await fetch('/api/state', { cache: 'no-store' });
+    render(await r.json());
+    failed = false;
+  } catch {
+    if (!failed) toast('Sem conexão com o cbw-live', 'bad');
+    failed = true;
+  }
+}
+load();
+setInterval(load, 1500);
 </script>
 </body>
 </html>

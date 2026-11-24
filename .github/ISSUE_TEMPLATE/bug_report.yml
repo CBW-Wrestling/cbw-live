@@ -1,0 +1,38 @@
+name: Bug / Erro
+description: Algo não funciona como esperado / Something is not working as expected
+labels: [bug]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Não cole `.env`, API Keys, secrets ou chaves do Mercure. / Never paste `.env`, API keys, secrets or Mercure keys.
+  - type: textarea
+    id: what
+    attributes:
+      label: O que aconteceu / What happened
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: O que era esperado / What you expected
+  - type: textarea
+    id: steps
+    attributes:
+      label: Como reproduzir / Steps to reproduce
+  - type: dropdown
+    id: os
+    attributes:
+      label: Sistema operacional / Operating system
+      options: [macOS, Windows, Linux]
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Versão do cbw-live / cbw-live version
+  - type: textarea
+    id: logs
+    attributes:
+      label: Logs (sem segredos) / Logs (no secrets)
+      render: text

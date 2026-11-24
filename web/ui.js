@@ -40,7 +40,7 @@ export function mountHeader(active, extraRight = '') {
   el.className = 'app-header';
   el.innerHTML = `
     <a class="brand" href="/" aria-label="CBW Live — início">
-      <img src="/assets/logo.svg" alt="" onerror="this.style.display='none'">
+      <img src="/assets/brand/cbw-live-dark.svg" alt="">
       <span><b>CBW Live</b><small>Gráficos de transmissão</small></span>
     </a>
     <nav class="nav" aria-label="Principal">

@@ -1,0 +1,14 @@
+name: Ideia / Feature request
+description: Sugerir algo novo / Suggest something new
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema ou necessidade / Problem or need
+    validations:
+      required: true
+  - type: textarea
+    id: idea
+    attributes:
+      label: Como imagina a solução / Proposed solution

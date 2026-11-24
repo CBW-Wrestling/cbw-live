@@ -1,6 +1,18 @@
+<p align="center">
+  <picture>
+    <!-- tema escuro: selo claro; tema claro: selo escuro -->
+    <source media="(prefers-color-scheme: dark)" srcset="assets/brand/cbw-live-light.svg">
+    <img src="assets/brand/cbw-live-dark.svg" alt="cbw-live" width="120">
+  </picture>
+</p>
+
 # cbw-live
 
+**Português** · [English](README.en.md)
+
 Gráficos de transmissão ao vivo da **CBW (Confederação Brasileira de Wrestling)** integrados ao **UWW Arena** e ao **UWW Timing**: placar, cronômetro, apresentação da luta, challenge, atendimento, passividade e vitória, prontos para OBS, vMix ou qualquer navegador. É uma alternativa própria ao LGTV da UWW.
+
+> Projeto open source (Apache-2.0), criado para a CBW com sua aprovação. **Não é afiliado, aprovado nem patrocinado pela UWW.** CBW, UWW e Wizd Digital são marcas de seus titulares; veja [Licença e créditos](#licença-e-créditos).
 
 ```
  UWW Timing (PC Windows de cada tapete)            servidor (Mac/Windows/Linux)
@@ -26,6 +38,7 @@ Gráficos de transmissão ao vivo da **CBW (Confederação Brasileira de Wrestli
 ## Sumário
 - [Como funciona](#como-funciona)
 - [Requisitos](#requisitos)
+- [Sistemas operacionais](#sistemas-operacionais)
 - [Instalação](#instalação)
 - [Uso](#uso)
 - [Telas](#telas)
@@ -40,6 +53,8 @@ Gráficos de transmissão ao vivo da **CBW (Confederação Brasileira de Wrestli
 - [Desenvolvimento](#desenvolvimento)
 - [Segurança](#segurança)
 - [Limitações conhecidas e próximos passos](#limitações-conhecidas-e-próximos-passos)
+- [Contribuindo](#contribuindo)
+- [Licença e créditos](#licença-e-créditos)
 
 ---
 
@@ -62,9 +77,25 @@ O placar não consulta o Arena durante a luta. Uma ressincronização de seguran
 ## Requisitos
 
 - **UWW Arena** rodando em Docker (instalação oficial `docker-compose`), acessível em `http://<ip>:8080`.
-- **Go 1.22+**, só para compilar. No macOS: `brew install go`.
+- **macOS, Windows ou Linux**, veja [Sistemas operacionais](#sistemas-operacionais).
+- **Go** (versão de `go.mod`), só se for compilar. Executáveis prontos ficam em [Releases](https://github.com/CBW-Wrestling/cbw-live/releases). No macOS: `brew install go`.
 - **UWW Timing** (Windows) na mesma rede, para operar as lutas.
 - OBS Studio, vMix ou um navegador moderno para exibir os overlays.
+
+## Sistemas operacionais
+
+| Sistema | Executável | Situação |
+|---|---|---|
+| macOS (Apple Silicon e Intel) | `cbw-live_*_darwin_*.tar.gz` | Testado pelo mantenedor |
+| Windows 10/11 (64 bits) | `cbw-live_*_windows_amd64.zip` | Compilado e testado no CI; ainda sem teste manual em evento. Feedback é bem-vindo |
+| Linux (amd64 e arm64) | `cbw-live_*_linux_*.tar.gz` | Compilado e testado no CI; ainda sem teste manual em evento. Feedback é bem-vindo |
+
+O código usa só a biblioteca padrão do Go e funciona igual nos três. O que muda é o ambiente:
+
+- **Windows:** libere a porta **8095** no Firewall do Windows se OBS/vMix rodarem em outra máquina. Use PowerShell ou Prompt para os comandos abaixo (`.\cbwlive.exe`). Se o Arena roda no Docker Desktop da mesma máquina, `host.docker.internal` funciona como no macOS.
+- **Linux:** o Docker não resolve `host.docker.internal` sozinho. Use o IP da máquina (ex.: `http://192.168.0.7:8095/webhook/arena`) ou adicione `--add-host=host.docker.internal:host-gateway` ao container do Arena.
+- **macOS:** `host.docker.internal` funciona direto no Docker Desktop.
+- Em qualquer sistema, o cbw-live pode rodar na mesma máquina do Arena ou em outra da rede.
 
 ## Instalação
 
@@ -76,25 +107,28 @@ No Arena (`http://<ip>:8080`), logado como administrador:
 
 > Não reaproveite o app **Scoreboard**, que é o do UWW Timing. Com credenciais separadas, trocar uma não derruba a outra.
 
-### 2. Configuração (`.env`)
+### 2. Obter o executável
+Baixe o arquivo do seu sistema em [Releases](https://github.com/CBW-Wrestling/cbw-live/releases) e extraia. Ou compile (precisa de Go):
+
 ```bash
 git clone https://github.com/CBW-Wrestling/cbw-live.git
 cd cbw-live
-./scripts/setup-env.sh            # ou: ./scripts/setup-env.sh /caminho/do/docker-compose/do/arena
-```
-O script pede a URL do Arena, o App ID e o Secret do app **CBW Live**, a API Key do usuário **cbwlive** e os IPs dos PCs do UWW Timing (opcional; veja o passo 6). A chave do Mercure ele lê sozinho do container `caddy` do Arena. O `.env` é criado com permissão 600 e nunca vai para o git. Modelo: [`.env.example`](.env.example).
-
-### 3. Compilar e rodar
-```bash
 go build -o bin/cbwlive ./cmd/cbwlive
-./bin/cbwlive                     # usa ./.env; ./bin/cbwlive -debug para log detalhado
+```
+Para outro sistema, compile com `GOOS`/`GOARCH` (ex.: `GOOS=windows GOARCH=amd64 go build -o bin/cbwlive.exe ./cmd/cbwlive`).
+
+### 3. Configuração (`.env`) e execução
+Em qualquer sistema:
+```bash
+./cbwlive setup                   # Windows: .\cbwlive.exe setup
+```
+O assistente pede a URL do Arena, o App ID e o Secret do app **CBW Live**, a API Key do usuário **cbwlive** e os IPs dos PCs do UWW Timing (opcional; veja o passo 6). Segredos não aparecem na tela. A chave do Mercure ele lê do container `caddy` do Arena quando o Docker está disponível (`-arena-dir <pasta do docker-compose>`) e, se não, pergunta. O `.env` é criado com permissão 600 (Unix) e nunca vai para o git. Modelo: [`.env.example`](.env.example). Em macOS/Linux, `./scripts/setup-env.sh` continua como atalho.
+
+Depois:
+```bash
+./cbwlive                         # usa ./.env; -debug para log detalhado (Windows: .\cbwlive.exe)
 ```
 Abra **http://localhost:8095**.
-
-Executável para o notebook Windows do evento:
-```bash
-GOOS=windows GOARCH=amd64 go build -o bin/cbwlive.exe ./cmd/cbwlive
-```
 
 ### 4. Webhook no Arena
 **Settings → Webhooks → Add a new Webhook**:
@@ -208,7 +242,7 @@ Cada modelo tem uma pré-visualização real (o próprio overlay, com dados fict
 | `TIMING_ADDRS` | PCs do UWW Timing para conexão direta, separados por vírgula (`192.168.0.11,192.168.0.12`; porta 9696 se omitida) | vazio |
 
 ### Logo e bandeiras
-- **Logo:** `assets/logo.svg`, exibida no cabeçalho do placar. Sem o arquivo, o placar se ajusta sozinho.
+- **Logo da organização:** `assets/logo.svg`, exibida no cabeçalho do placar. O repositório **não** traz a logo real da CBW: sem o arquivo, o cbw-live usa um placeholder genérico (`assets/logo.placeholder.svg`, embutido no executável). Para usar a sua, coloque o arquivo em `assets/logo.svg` (o `.gitignore` o mantém fora do git) e recarregue o overlay.
 - **Bandeiras de estado:** `assets/flags/<sigla>.svg` (`pb.svg`, `sp.svg`…). O nome do arquivo é o código da equipe no Arena (`teamAlternateName`). Essas bandeiras têm prioridade sobre as de país, que vêm do próprio Arena (`/build/images/flags/custom/`). Todas aparecem em círculo.
 - Arquivos em `assets/` podem ser trocados com o serviço rodando. Basta recarregar o overlay.
 
@@ -291,6 +325,7 @@ Os botões da página de controle sempre podem corrigir ou forçar qualquer grá
 | Coluna "UWW Timing direto" vazia | Timing fechado, IP errado em `TIMING_ADDRS` ou rede diferente. Teste `http://<ip-do-timing>:9696/` no navegador. Log `timing: conectado` / `ligado ao tapete` |
 | Timing conectado mas sem tapete | Ainda não houve luta carregada e os nomes não bateram com as lutas abertas; carregue a luta no Timing |
 | Sangue/passividade/challenge pedido não aparecem | Timing não conectado direto (veja acima); use os botões do controle como reserva |
+| Logo do overlay parece genérica | Esperado: o repositório traz um placeholder. Coloque a sua em `assets/logo.svg` |
 
 ### Logs de descoberta (`data/`)
 | Arquivo | Conteúdo |
@@ -310,10 +345,10 @@ go run ./cmd/cbwlive -debug       # rodar sem compilar
 go run ./cmd/timingtap -addr 192.168.0.11:9696   # ver ao vivo as mensagens de um UWW Timing
 ```
 No Windows, `scripts/windows/investigar-timing.ps1` levanta portas, conexões e configurações do Timing/LGTV (somente leitura; `-Capturar` grava pacotes com o `pktmon`).
-As páginas em `web/` são embutidas no executável (`go:embed`), então é preciso recompilar após editar.
+As páginas em `web/` são embutidas no executável (`go:embed`), então é preciso recompilar após editar. O CI roda `go vet` e `go test -race ./...` em Linux, Windows e macOS.
 
 ```
-cmd/cbwlive/        serviço (HTTP, rotas, proxy de bandeiras)
+cmd/cbwlive/        serviço (HTTP, rotas, proxy de bandeiras) e subcomando `setup`
 cmd/arenaget/       ferramenta de consulta à API do Arena
 cmd/timingtap/      ferramenta de escuta do WebSocket do UWW Timing
 internal/arena/     cliente REST/OAuth do Arena
@@ -323,7 +358,7 @@ internal/live/      estado por tapete, sincronização, conexão com o Timing, a
 internal/hubproxy/  proxy /hub para os overlays (só tópicos cbw/)
 internal/webhook/   recepção dos webhooks do Arena
 web/                overlay, controle, configurações, galeria, lista
-assets/             logo e bandeiras dos estados
+assets/             placeholder de logo, bandeiras dos estados, marcas em brand/
 scripts/            setup-env.sh; windows/investigar-timing.ps1
 ```
 
@@ -349,6 +384,7 @@ scripts/            setup-env.sh; windows/investigar-timing.ps1
 - A instalação Docker do Arena expõe o Redis em `0.0.0.0:16370`. Em VPS/rede aberta, feche essa porta no firewall.
 - A porta 9696 do UWW Timing não tem autenticação: qualquer computador da rede pode **ler** o placar (não alterar). Mais um motivo para uma rede só da produção.
 - O token do webhook ainda não é exigido (`WEBHOOK_TOKEN_ENFORCE=false`), porque o Arena não mostrou onde o envia no payload. Isso precisa ser revisto antes de expor o serviço fora da rede local.
+- Para reportar uma vulnerabilidade, veja [SECURITY.md](SECURITY.md).
 
 ## Limitações conhecidas e próximos passos
 - **Lesão × sangue:** o Timing envia o tempo de atendimento (`ij1`/`ij2`) sem distinguir o tipo; o overlay mostra como sangue. Lesão continua disponível pelo botão.
@@ -357,3 +393,20 @@ scripts/            setup-env.sh; windows/investigar-timing.ps1
 - **Período** ("Period 1/2") é calculado a partir do tempo total enviado pelo Timing. O comportamento no intervalo ainda não foi confirmado.
 - **Sem foto** dos atletas, porque o Arena não fornece.
 - Os eventos de teste estão com fuso **Europe/Zurich** no Arena. Ajuste para **America/Sao_Paulo** para o "Início em" ficar correto.
+- **Windows e Linux** são verificados pelo CI, mas ainda não foram testados manualmente em evento ao vivo.
+
+## Contribuindo
+Contribuições são bem-vindas: veja [CONTRIBUTING.md](CONTRIBUTING.md). Vulnerabilidades: [SECURITY.md](SECURITY.md). Código de conduta: [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
+## Licença e créditos
+Código sob a licença [Apache-2.0](LICENSE). As marcas **CBW**, **UWW** (inclui UWW Arena e UWW Timing) e **Wizd Digital** pertencem a seus titulares e **não** são licenciadas por ela (veja [NOTICE](NOTICE)). Este projeto não é afiliado à UWW.
+
+<p>
+  Desenvolvido por
+  <a href="https://wizddigital.com">
+    <picture>
+      <source media="(prefers-color-scheme: dark)" srcset="assets/brand/wizd-digital-on-dark.svg">
+      <img src="assets/brand/wizd-digital-on-light.svg" alt="Wizd Digital" height="28">
+    </picture>
+  </a>
+</p>

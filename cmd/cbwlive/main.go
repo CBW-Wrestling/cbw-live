@@ -26,6 +26,7 @@ import (
 	"syscall"
 	"time"
 
+	"cbwlive/assets"
 	"cbwlive/internal/arena"
 	"cbwlive/internal/config"
 	"cbwlive/internal/hubproxy"
@@ -36,6 +37,13 @@ import (
 )
 
 func main() {
+	if len(os.Args) > 1 && os.Args[1] == "setup" {
+		if err := setupMain(os.Args[2:]); err != nil {
+			fmt.Fprintln(os.Stderr, "setup:", err)
+			os.Exit(1)
+		}
+		return
+	}
 	envFile := flag.String("env", ".env", "arquivo de configuração")
 	debug := flag.Bool("debug", false, "log detalhado")
 	flag.Parse()
@@ -133,8 +141,8 @@ func run(envFile string) error {
 		writeJSON(w, settings.Get())
 	})
 	mux.Handle("GET /flags/{code}", newFlagProxy(cfg.ArenaURL, filepath.Join(cfg.AssetsDir, "flags")))
-	// logo e demais arquivos visuais da CBW (assets/logo.svg, …)
-	mux.Handle("GET /assets/", http.StripPrefix("/assets/", noCache(http.FileServer(http.Dir(cfg.AssetsDir)))))
+	// logo e demais arquivos visuais (assets/logo.svg, …); sem eles usa os embutidos (placeholder, marca)
+	mux.Handle("GET /assets/", http.StripPrefix("/assets/", noCache(assetsHandler(cfg.AssetsDir, assets.Files))))
 	mux.Handle("GET /hub", proxy)
 	mux.Handle("POST /webhook/arena", &webhook.Handler{
 		Token: cfg.WebhookToken, Enforce: cfg.WebhookTokenEnforce, Log: webhookLog,

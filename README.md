@@ -242,7 +242,7 @@ Cada modelo tem uma pré-visualização real (o próprio overlay, com dados fict
 | `TIMING_ADDRS` | PCs do UWW Timing para conexão direta, separados por vírgula (`192.168.0.11,192.168.0.12`; porta 9696 se omitida) | vazio |
 
 ### Logo e bandeiras
-- **Logo da organização:** `assets/logo.svg`, exibida no cabeçalho do placar. O repositório **não** traz a logo real da CBW: sem o arquivo, o cbw-live usa um placeholder genérico (`assets/logo.placeholder.svg`, embutido no executável). Para usar a sua, coloque o arquivo em `assets/logo.svg` (o `.gitignore` o mantém fora do git) e recarregue o overlay.
+- **Logo da organização:** `assets/logo.svg`, exibida no cabeçalho do placar. Sem o arquivo, o cbw-live usa o placeholder `assets/logo.placeholder.svg` (a logo da CBW, embutida no executável; é uma marca e não está coberta pela licença, veja [NOTICE](NOTICE)). Para usar a sua, coloque o arquivo em `assets/logo.svg` e recarregue o overlay.
 - **Bandeiras de estado:** `assets/flags/<sigla>.svg` (`pb.svg`, `sp.svg`…). O nome do arquivo é o código da equipe no Arena (`teamAlternateName`). Essas bandeiras têm prioridade sobre as de país, que vêm do próprio Arena (`/build/images/flags/custom/`). Todas aparecem em círculo.
 - Arquivos em `assets/` podem ser trocados com o serviço rodando. Basta recarregar o overlay.
 
@@ -325,7 +325,7 @@ Os botões da página de controle sempre podem corrigir ou forçar qualquer grá
 | Coluna "UWW Timing direto" vazia | Timing fechado, IP errado em `TIMING_ADDRS` ou rede diferente. Teste `http://<ip-do-timing>:9696/` no navegador. Log `timing: conectado` / `ligado ao tapete` |
 | Timing conectado mas sem tapete | Ainda não houve luta carregada e os nomes não bateram com as lutas abertas; carregue a luta no Timing |
 | Sangue/passividade/challenge pedido não aparecem | Timing não conectado direto (veja acima); use os botões do controle como reserva |
-| Logo do overlay parece genérica | Esperado: o repositório traz um placeholder. Coloque a sua em `assets/logo.svg` |
+| Overlay mostra a logo da CBW, não a sua | Esperado: ela é o placeholder padrão. Coloque a sua em `assets/logo.svg` |
 
 ### Logs de descoberta (`data/`)
 | Arquivo | Conteúdo |

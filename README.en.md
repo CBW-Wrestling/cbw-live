@@ -242,7 +242,7 @@ Each style has a real preview (the overlay itself, with fake data) on the settin
 | `TIMING_ADDRS` | UWW Timing PCs for the direct connection, comma-separated (`192.168.0.11,192.168.0.12`; port 9696 if omitted) | empty |
 
 ### Logo and flags
-- **Organization logo:** `assets/logo.svg`, shown in the scoreboard header. The repository does **not** ship the CBW's real logo: without the file, cbw-live uses a generic placeholder (`assets/logo.placeholder.svg`, embedded in the executable). To use yours, put the file at `assets/logo.svg` (`.gitignore` keeps it out of git) and reload the overlay.
+- **Organization logo:** `assets/logo.svg`, shown in the scoreboard header. Without the file, cbw-live uses the placeholder `assets/logo.placeholder.svg` (the CBW logo, embedded in the executable; it is a trademark not covered by the license, see [NOTICE](NOTICE)). To use yours, put the file at `assets/logo.svg` and reload the overlay.
 - **State flags:** `assets/flags/<code>.svg` (`pb.svg`, `sp.svg`…). The file name is the team code in Arena (`teamAlternateName`). These flags take priority over country flags, which come from Arena itself (`/build/images/flags/custom/`). All appear in a circle.
 - Files in `assets/` can be replaced while the service is running. Just reload the overlay.
 
@@ -325,7 +325,7 @@ The control page buttons can always correct or force any graphic.
 | "UWW Timing direct" column empty | Timing closed, wrong IP in `TIMING_ADDRS`, or different network. Test `http://<timing-ip>:9696/` in a browser. Log `timing: conectado` / `ligado ao tapete` |
 | Timing connected but no mat | No fight loaded yet and the names did not match the open fights; load the fight in Timing |
 | Blood/passivity/challenge requested do not show | Timing not connected directly (see above); use the control buttons as a fallback |
-| Overlay logo looks generic | Expected: the repo ships a placeholder. Put your logo at `assets/logo.svg` |
+| Overlay shows the CBW logo, not yours | Expected: it is the default placeholder. Put your logo at `assets/logo.svg` |
 
 ### Discovery logs (`data/`)
 | File | Content |

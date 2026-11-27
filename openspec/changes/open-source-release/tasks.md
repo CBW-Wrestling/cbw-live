@@ -8,10 +8,10 @@
 ## 2. Identidade visual (brand-assets)
 
 - [x] 2.1 Criar a logo do cbw-live em `assets/brand/` (versões clara e escura, SVG). Verificar: abrir os dois SVGs no navegador sobre fundo claro e escuro, ambos legíveis.
-- [x] 2.2 Criar `assets/logo.placeholder.svg` genérico (sem a marca CBW). Verificar: arquivo existe e não contém a arte da logo real.
+- [x] 2.2 Criar `assets/logo.placeholder.svg` com a logo da CBW. Verificar: o overlay sem `assets/logo.svg` mostra a logo.
 - [x] 2.3 Criar variante da logo da Wizd Digital para fundo claro em `assets/brand/`. Verificar: visível em tema claro do GitHub.
 - [x] 2.4 Servidor: `/assets/logo.svg` cai para `logo.placeholder.svg` quando o arquivo falta (`cmd/cbwlive/main.go`) e há teste. Verificar: `go test ./cmd/...` passa e `curl -I /assets/logo.svg` responde 200 sem `assets/logo.svg`.
-- [x] 2.5 Tirar `assets/logo.svg` do git (`git rm --cached`), adicionar ao `.gitignore`, manter cópia local. Verificar: `git status` limpo com o arquivo presente e `git ls-files assets/logo.svg` vazio.
+- [x] 2.5 Não ignorar `assets/logo.svg` no `.gitignore`. Verificar: `git check-ignore assets/logo.svg` não retorna nada.
 - [x] 2.6 Atualizar a home (`web/index.html`) com crédito "Desenvolvido por Wizd Digital" ligado a `https://wizddigital.com` e logo cbw-live. Verificar: abrir `/` e clicar no crédito.
 
 ## 3. Documentação

@@ -9,6 +9,3 @@ bin/
 
 # sistema
 .DS_Store
-
-# logo real da organização (marca CBW): só local, o repo público usa assets/logo.placeholder.svg
-assets/logo.svg

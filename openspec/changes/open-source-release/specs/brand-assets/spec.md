@@ -2,27 +2,20 @@
 
 ## Purpose
 
-Define como logos e créditos são carregados e exibidos, para que o repositório público funcione sem a marca real da CBW e mantenha a identidade própria do cbw-live e o crédito da Wizd Digital.
+Define como logos e créditos são carregados e exibidos, para que o repositório funcione sem configuração, com a logo da CBW como placeholder, e mantenha a identidade própria do cbw-live e o crédito da Wizd Digital.
 
 ## ADDED Requirements
 
 ### Requirement: Placeholder quando a logo da organização não existe
-O serviço SHALL servir `/assets/logo.svg` a partir de `ASSETS_DIR` e, se o arquivo não existir, MUST servir uma logo genérica incluída no repositório.
+O serviço SHALL servir `/assets/logo.svg` a partir de `ASSETS_DIR` e, se o arquivo não existir, MUST servir o placeholder incluído no repositório (a logo da CBW).
 
 #### Scenario: Instalação limpa
 - **WHEN** o cbw-live roda sem `assets/logo.svg`
-- **THEN** o overlay e a home mostram a logo genérica, sem imagem quebrada
+- **THEN** o overlay e a home mostram a logo da CBW, sem imagem quebrada
 
-#### Scenario: Logo real fornecida
+#### Scenario: Logo própria fornecida
 - **WHEN** o usuário coloca seu `assets/logo.svg`
 - **THEN** o serviço serve esse arquivo no lugar do placeholder
-
-### Requirement: Logo real fora do versionamento
-O repositório SHALL NOT versionar a logo real da CBW daqui em diante; `assets/logo.svg` MUST estar no `.gitignore`.
-
-#### Scenario: Commit com logo local
-- **WHEN** o mantenedor tem `assets/logo.svg` local e roda `git status`
-- **THEN** o arquivo não aparece como alteração
 
 ### Requirement: Identidade do cbw-live
 O projeto SHALL ter logo própria em `assets/brand/`, usada no topo dos READMEs e na home.

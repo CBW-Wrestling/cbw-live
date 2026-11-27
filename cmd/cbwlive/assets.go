@@ -8,7 +8,7 @@ import (
 
 // assetsHandler serve /assets/*: arquivo em dir (ASSETS_DIR) tem prioridade;
 // se não existir, usa os arquivos embutidos no executável. Sem assets/logo.svg
-// (logo real da organização, fora do git), serve logo.placeholder.svg.
+// (logo própria de quem usa), serve logo.placeholder.svg (a logo da CBW).
 func assetsHandler(dir string, embedded fs.FS) http.Handler {
 	disk := http.FileServer(http.Dir(dir))
 	diskFS := http.Dir(dir)

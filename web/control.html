@@ -207,7 +207,7 @@ import { mountHeader, esc, flagURL, icon, toast, copyText, matView } from '/ui.j
 mountHeader('mats');
 
 const params = new URLSearchParams(location.search);
-const eventId = params.get('event'), mat = params.get('mat');
+const eventId = params.get('event') || 'area', mat = params.get('mat');
 const $ = (id) => document.getElementById(id);
 let current = null;
 
@@ -216,7 +216,7 @@ for (const [id, name] of Object.entries({ 'i-layout': 'layout', 'i-intro': 'play
 $('copy-url').innerHTML = icon('copy');
 $('open-url').innerHTML = icon('external');
 
-const overlayPath = `/overlay.html?event=${encodeURIComponent(eventId)}&mat=${encodeURIComponent(mat)}`;
+const overlayPath = `/overlay.html?${eventId === 'area' ? '' : `event=${encodeURIComponent(eventId)}&`}mat=${encodeURIComponent(mat)}`;
 // ?bg=transparent|green|blue na URL desta página força o fundo só da prévia
 $('preview').src = overlayPath + (params.get('bg') ? `&bg=${encodeURIComponent(params.get('bg'))}` : '') + (params.get('still') === '1' ? '&still=1' : '');
 $('overlay-url').value = location.origin + overlayPath;

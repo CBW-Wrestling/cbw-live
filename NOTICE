@@ -10,13 +10,17 @@ Trademarks and affiliation
 "Wizd Digital" and its logo are marks of Wizd Digital.
 
 These marks are NOT licensed under the Apache License. The repository ships
-only a generic placeholder in place of the CBW logo. Use of any of these marks
-requires permission from their respective owners.
+the CBW logo as its default placeholder (assets/logo.placeholder.svg). Use of any
+of these marks requires permission from their respective owners.
 
 cbw-live was created for the CBW with its approval. It is an independent
 project and is not affiliated with, endorsed by, or sponsored by United World
 Wrestling. It interoperates with UWW Arena and UWW Timing through their
 network interfaces.
+
+The flag images in assets/flags/ were copied from UWW software (country and
+team flags from UWW Arena; Brazilian state flags as used by UWW Timing). They
+are NOT licensed under the Apache License; rights remain with their owners.
 
 ---
 
@@ -30,8 +34,12 @@ Este produto é licenciado sob a Apache License, Version 2.0 (veja LICENSE).
 "Wizd Digital" e sua logo são marcas da Wizd Digital.
 
 Essas marcas NÃO são licenciadas pela Apache License. O repositório inclui
-apenas um placeholder genérico no lugar da logo da CBW. O uso de qualquer uma
+a logo da CBW como placeholder padrão (assets/logo.placeholder.svg). O uso de qualquer uma
 delas depende de autorização de seus titulares.
 
 O cbw-live foi criado para a CBW, com sua aprovação. É um projeto independente,
 sem afiliação, aval ou patrocínio da United World Wrestling.
+
+As bandeiras em assets/flags/ foram copiadas de software da UWW (países e
+equipes do UWW Arena; estados brasileiros como no UWW Timing). Elas NÃO são
+licenciadas pela Apache License; os direitos são de seus titulares.

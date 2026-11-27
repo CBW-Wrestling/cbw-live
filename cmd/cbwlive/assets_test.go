@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"testing/fstest"
+
+	"cbwlive/assets"
 )
 
 func get(h http.Handler, p string) *httptest.ResponseRecorder {
@@ -46,5 +48,31 @@ func TestAssetsEmbeddedAndMissing(t *testing.T) {
 	}
 	if rec := get(h, "/../go.mod"); rec.Code == 200 {
 		t.Fatal("path traversal servido")
+	}
+}
+
+func TestFlagsWorkWithoutArena(t *testing.T) {
+	mux := http.NewServeMux()
+	mux.Handle("GET /flags/{code}", newFlagProxy("http://127.0.0.1:1", t.TempDir(), assets.Files))
+	for _, c := range []string{"sp", "BRA", "iri.svg"} {
+		if rec := get(mux, "/flags/"+c); rec.Code != 200 {
+			t.Errorf("%s: code=%d", c, rec.Code)
+		}
+	}
+}
+
+// Estado e país conhecidos usam a nossa bandeira; só código desconhecido vem do Arena.
+func TestFlagsOnlyUnknownCodeComesFromArena(t *testing.T) {
+	arena := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, _ *http.Request) {
+		w.Write([]byte("<svg>arena</svg>"))
+	}))
+	defer arena.Close()
+	mux := http.NewServeMux()
+	mux.Handle("GET /flags/{code}", newFlagProxy(arena.URL, t.TempDir(), assets.Files))
+	for code, fromArena := range map[string]bool{"sp": false, "bra": false, "clube-x": true} {
+		rec := get(mux, "/flags/"+code)
+		if got := strings.Contains(rec.Body.String(), ">arena<"); rec.Code != 200 || got != fromArena {
+			t.Errorf("%s: code=%d do arena=%v", code, rec.Code, got)
+		}
 	}
 }

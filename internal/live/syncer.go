@@ -37,7 +37,11 @@ type Syncer struct {
 	snapAsked map[string]time.Time
 	mu        sync.Mutex
 	mats      map[string]arena.Mat // key -> mat
-	subs      map[string]context.CancelFunc
+	// URLs por área: evento ativo de cada tapete e tapetes listados no último sync
+	amu    sync.Mutex
+	areas  map[string]string // nome do tapete -> eventId
+	listed map[string]bool   // key
+	subs   map[string]context.CancelFunc
 }
 
 type message struct {
@@ -54,6 +58,7 @@ func NewSyncer(a *arena.Client, hub *mercure.Hub, store *Store, eventID string, 
 		snapAsked:  map[string]time.Time{},
 		mats:       map[string]arena.Mat{},
 		subs:       map[string]context.CancelFunc{},
+		areas:      map[string]string{},
 	}
 }
 
@@ -119,6 +124,7 @@ func (s *Syncer) sync(ctx context.Context) {
 		return
 	}
 
+	listed, names := map[string]bool{}, map[string]bool{}
 	var wg sync.WaitGroup
 	sem := make(chan struct{}, 8)
 	for _, ev := range events {
@@ -128,6 +134,7 @@ func (s *Syncer) sync(ctx context.Context) {
 		for _, mat := range ev.Mats {
 			ev, mat := ev, mat
 			s.ensureLiveSub(ctx, ev.ID, mat)
+			listed[Key(ev.ID, mat.Name)], names[mat.Name] = true, true
 			wg.Add(1)
 			sem <- struct{}{}
 			go func() {
@@ -137,6 +144,13 @@ func (s *Syncer) sync(ctx context.Context) {
 		}
 	}
 	wg.Wait()
+	s.amu.Lock()
+	s.listed = listed
+	s.amu.Unlock()
+	// um evento pode ter saído do ar sem gerar nenhuma mensagem
+	for name := range names {
+		s.publishArea(ctx, name, "", nil)
+	}
 	slog.Debug("sync concluído", "em", time.Since(start))
 }
 
@@ -283,6 +297,7 @@ func (s *Syncer) publish(ctx context.Context, eventID, matName string, msg messa
 	if err := s.Hub.Publish(ctx, Topic(eventID, matName), b); err != nil {
 		slog.Warn("mercure: falha ao publicar", "mat", matName, "err", err)
 	}
+	s.publishArea(ctx, matName, eventID, b)
 }
 
 // Close encerra as assinaturas do placar oficial.

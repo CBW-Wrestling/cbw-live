@@ -29,7 +29,8 @@ Gráficos de transmissão ao vivo da **CBW (Confederação Brasileira de Wrestli
 - **Conexão direta com o UWW Timing** (porta 9696, a mesma da tela "UWW TV Scoreboard"): tudo o que a mesa faz vira gráfico automaticamente, incluindo apresentação da luta, pausa do cronômetro, challenge em cada etapa (pedido, em análise, ganhou, perdeu, cancelado), tempo de sangue, passividade e vitória com o tipo oficial.
 - **Nada para instalar nas máquinas de transmissão e operação:** o cbw-live roda no servidor; OBS, vMix e navegadores só abrem um link.
 - **Página de controle** para o operador corrigir ou forçar qualquer gráfico (reserva caso o Timing caia).
-- **Eventos nacionais e internacionais:** bandeiras dos 27 estados (as mesmas do UWW Timing) e de países (servidas pelo próprio Arena).
+- **Eventos nacionais e internacionais:** bandeiras dos 27 estados (as mesmas do UWW Timing) e de países, embutidas no executável (não dependem do Arena).
+- **URL fixa por área:** `/overlay.html?mat=A` acompanha o tapete mesmo quando o evento muda no decorrer do dia.
 - **Fundo transparente ou chroma key** (verde/azul).
 - **Leve e rápido:** um único executável em Go (~10 MB, sem runtime), republica cada atualização em ~3 ms e distribui pelo Mercure que já roda no Arena.
 
@@ -173,7 +174,7 @@ Novos eventos e tapetes criados no Arena aparecem automaticamente: a cada webhoo
 | Tela | URL | Para quê |
 |---|---|---|
 | **Lista de tapetes** | `/` | Todos os eventos e tapetes, status do placar ao vivo, links de overlay e controle |
-| **Overlay** | `/overlay.html?event=<id>&mat=<tapete>` | O gráfico de transmissão (1920×1080). É a fonte do OBS/vMix |
+| **Overlay** | `/overlay.html?mat=<tapete>` | O gráfico de transmissão (1920×1080). É a fonte do OBS/vMix |
 | **Controle do operador** | `/control.html?event=<id>&mat=<tapete>` | Botões dos gráficos manuais + prévia ao vivo do overlay |
 | **Configurações** | `/settings.html` | Preferências globais (valem para todos os tapetes) |
 | **Galeria de estados** | `/preview.html` | Todos os estados do overlay com dados fictícios, para revisar o visual sem Arena nem Timing |
@@ -242,13 +243,13 @@ Cada modelo tem uma pré-visualização real (o próprio overlay, com dados fict
 | `TIMING_ADDRS` | PCs do UWW Timing para conexão direta, separados por vírgula (`192.168.0.11,192.168.0.12`; porta 9696 se omitida) | vazio |
 
 ### Logo e bandeiras
-- **Logo da organização:** `assets/logo.svg`, exibida no cabeçalho do placar. O repositório **não** traz a logo real da CBW: sem o arquivo, o cbw-live usa um placeholder genérico (`assets/logo.placeholder.svg`, embutido no executável). Para usar a sua, coloque o arquivo em `assets/logo.svg` (o `.gitignore` o mantém fora do git) e recarregue o overlay.
-- **Bandeiras de estado:** `assets/flags/<sigla>.svg` (`pb.svg`, `sp.svg`…). O nome do arquivo é o código da equipe no Arena (`teamAlternateName`). Essas bandeiras têm prioridade sobre as de país, que vêm do próprio Arena (`/build/images/flags/custom/`). Todas aparecem em círculo.
+- **Logo da organização:** `assets/logo.svg`, exibida no cabeçalho do placar. Sem o arquivo, o cbw-live usa o placeholder `assets/logo.placeholder.svg` (a logo da CBW, embutida no executável; é uma marca e não está coberta pela licença, veja [NOTICE](NOTICE)). Para usar a sua, coloque o arquivo em `assets/logo.svg` e recarregue o overlay.
+- **Bandeiras:** `assets/flags/<sigla>.svg` (`pb.svg`, `sp.svg`…). O nome do arquivo é o código da equipe no Arena (`teamAlternateName`). Estados e países são embutidos no executável e não dependem do Arena; um arquivo em `assets/flags/` tem prioridade, e o Arena só é consultado para um código que não esteja embutido. Todas aparecem em círculo.
 - Arquivos em `assets/` podem ser trocados com o serviço rodando. Basta recarregar o overlay.
 
 ## Uso no OBS
 1. **Fontes → + → Navegador** (Browser Source).
-2. **URL:** `http://<ip>:8095/overlay.html?event=<id>&mat=<tapete>` (copie da lista de tapetes).
+2. **URL:** `http://<ip>:8095/overlay.html?mat=<tapete>` (copie da lista de tapetes). A URL é fixa por área: quando o evento do tapete muda, o overlay acompanha sozinho (Timing conectado, senão a última mensagem ao vivo). Para prender a um evento, acrescente `&event=<id>`.
 3. **Largura 1920**, **Altura 1080**.
 4. Deixe desmarcados "Desligar fonte quando não visível" e "Atualizar navegador quando a cena ficar ativa". Assim o overlay fica sempre conectado e as animações não reiniciam.
 5. **CSS personalizado:** apague o CSS padrão do OBS (ou deixe `body { background-color: rgba(0,0,0,0); }`).
@@ -316,7 +317,7 @@ Os botões da página de controle sempre podem corrigir ou forçar qualquer grá
 | Sintoma | Causa provável / solução |
 |---|---|
 | Log `OUTRO PROGRAMA responde nesta porta via IPv4` | Outro app usa a porta (já aconteceu com o REAPER na 8090). Troque `LISTEN_ADDR` |
-| Overlay vazio | Nenhuma luta aberta no tapete, ou `event`/`mat` errados na URL. Confira na lista de tapetes |
+| Overlay vazio | Nenhuma luta aberta no tapete, ou `mat` (ou `event`, se usado) errado na URL. Confira na lista de tapetes |
 | Webhooks não chegam | Confira o webhook em Settings → Webhooks (Enabled) e a URL `host.docker.internal:8095`. Os recebidos ficam em `data/webhooks.jsonl` |
 | `invalid_client` / `invalid_grant` no log | App ID/Secret ou API Key errados, ou o app não usa o grant `.../grants/api_key` |
 | Placar atrasado ~1 s | Normal: o Timing publica uma vez por segundo, na troca do segundo. O cbw-live adiciona ~3 ms |
@@ -325,7 +326,7 @@ Os botões da página de controle sempre podem corrigir ou forçar qualquer grá
 | Coluna "UWW Timing direto" vazia | Timing fechado, IP errado em `TIMING_ADDRS` ou rede diferente. Teste `http://<ip-do-timing>:9696/` no navegador. Log `timing: conectado` / `ligado ao tapete` |
 | Timing conectado mas sem tapete | Ainda não houve luta carregada e os nomes não bateram com as lutas abertas; carregue a luta no Timing |
 | Sangue/passividade/challenge pedido não aparecem | Timing não conectado direto (veja acima); use os botões do controle como reserva |
-| Logo do overlay parece genérica | Esperado: o repositório traz um placeholder. Coloque a sua em `assets/logo.svg` |
+| Overlay mostra a logo da CBW, não a sua | Esperado: ela é o placeholder padrão. Coloque a sua em `assets/logo.svg` |
 
 ### Logs de descoberta (`data/`)
 | Arquivo | Conteúdo |
@@ -366,12 +367,12 @@ scripts/            setup-env.sh; windows/investigar-timing.ps1
 | Método | Rota | Descrição |
 |---|---|---|
 | GET | `/api/state` | Estado de todos os tapetes |
-| GET | `/api/state/{evento}/{tapete}` | Estado de um tapete |
+| GET | `/api/state/{evento}/{tapete}` | Estado de um tapete (`area` como evento = o que está ativo no tapete; vale também em `/api/control`) |
 | POST | `/api/control/{evento}/{tapete}` | Aciona um gráfico: `{"graphic":"challenge","visible":true,"side":"home","status":"won"}` |
 | GET/PUT | `/api/settings` | Configurações globais |
 | POST | `/webhook/arena` | Webhooks do Arena |
 | GET | `/hub?topic=cbw/...` | Assinatura SSE (proxy do Mercure) |
-| GET | `/flags/{código}.svg` | Bandeira (estados locais ou países do Arena) |
+| GET | `/flags/{código}.svg` | Bandeira (`assets/flags`, senão a embutida, senão o Arena) |
 | GET | `/healthz` | Saúde do serviço |
 
 `graphic`: `intro`, `challenge` (`status`: requested, challenge, won, lost, canceled), `injury` (`kind`: blood, injury), `passivity`, `victory` (`victoryType`), `layout` (`status`: expanded, collapsed) ou `all` (só para esconder). `side`: `home` (vermelho) ou `away` (azul).

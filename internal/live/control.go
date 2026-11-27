@@ -70,6 +70,11 @@ func (s *Syncer) ApplyControl(ctx context.Context, eventID, matName string, req 
 	if err := req.validate(); err != nil {
 		return MatState{}, err
 	}
+	if eventID == AreaEvent {
+		if st, ok := s.ActiveArea(matName); ok {
+			eventID = st.EventID
+		}
+	}
 	key := Key(eventID, matName)
 	if _, ok := s.Store.Get(key); !ok {
 		return MatState{}, fmt.Errorf("tapete não encontrado: %s", key)

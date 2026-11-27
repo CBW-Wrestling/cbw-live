@@ -15,7 +15,8 @@
 import { BOARDS, INTROS, POSITIONS } from '/themes.js';
 
 const params = new URLSearchParams(location.search);
-const eventId = params.get('event');
+// sem ?event= a URL é da área: acompanha o tapete em qualquer evento
+const eventId = params.get('event') || 'area';
 const matName = params.get('mat');
 const debug = params.get('debug') === '1';
 // still=1: sem transições/animações — mostra direto o estado final (prints, divulgação)
@@ -341,6 +342,11 @@ function startsIn(ts) {
 
 // ---------- dados ----------
 function applySnapshot(st) {
+  const old = state.snapshot;
+  if (old && old.eventId !== st.eventId) { // área mudou de evento: descarta o placar anterior
+    state.live = null;
+    prev.score = {};
+  }
   state.snapshot = st;
   if (st.serverTime) state.serverOffset = st.serverTime - Date.now();
   if (st.live) state.live = st.live;
@@ -410,8 +416,8 @@ async function startMock(name) {
 const mock = params.get('mock');
 if (mock) {
   startMock(mock);
-} else if (!eventId || !matName) {
-  document.body.textContent = 'Informe ?event=<id>&mat=<nome>';
+} else if (!matName) {
+  document.body.textContent = 'Informe ?mat=<nome> (e, opcional, &event=<id>)';
 } else {
   Promise.all([loadSettings(), loadSnapshot()]).then(subscribe);
 }

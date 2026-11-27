@@ -35,7 +35,7 @@ As páginas em `web/` e os arquivos em `assets/` (placeholder, marcas) são embu
 ## O que nunca deve entrar em um PR
 
 - `.env`, API Keys, secrets, chaves do Mercure, capturas com credenciais.
-- A logo real da CBW, logos ou marcas de terceiros (use o placeholder). Veja [NOTICE](NOTICE).
+- Logos ou marcas de terceiros (a única exceção é o placeholder da CBW). Veja [NOTICE](NOTICE).
 - Dados pessoais de atletas ou de operadores que não sejam públicos.
 
 ## Licença
@@ -79,7 +79,7 @@ The pages in `web/` and the files in `assets/` (placeholder, brand files) are em
 ### What must never go into a PR
 
 - `.env`, API keys, secrets, Mercure keys, screenshots showing credentials.
-- The CBW's real logo, or third-party logos or marks (use the placeholder). See [NOTICE](NOTICE).
+- Third-party logos or marks (the only exception is the CBW placeholder). See [NOTICE](NOTICE).
 - Personal data of athletes or operators that is not public.
 
 ### License

@@ -105,7 +105,13 @@ func run(envFile string) error {
 	})
 	mux.HandleFunc("GET /api/state", func(w http.ResponseWriter, _ *http.Request) { writeJSON(w, store.All()) })
 	mux.HandleFunc("GET /api/state/{event}/{mat}", func(w http.ResponseWriter, r *http.Request) {
-		st, ok := store.Get(live.Key(r.PathValue("event"), r.PathValue("mat")))
+		var st live.MatState
+		var ok bool
+		if ev, mat := r.PathValue("event"), r.PathValue("mat"); ev == live.AreaEvent {
+			st, ok = syncer.ActiveArea(mat)
+		} else {
+			st, ok = store.Get(live.Key(ev, mat))
+		}
 		if !ok {
 			http.NotFound(w, r)
 			return
@@ -140,7 +146,7 @@ func run(envFile string) error {
 		slog.Info("configurações salvas", "collapseMode", in.CollapseMode, "showStartIn", in.ShowStartIn)
 		writeJSON(w, settings.Get())
 	})
-	mux.Handle("GET /flags/{code}", newFlagProxy(cfg.ArenaURL, filepath.Join(cfg.AssetsDir, "flags")))
+	mux.Handle("GET /flags/{code}", newFlagProxy(cfg.ArenaURL, filepath.Join(cfg.AssetsDir, "flags"), assets.Files))
 	// logo e demais arquivos visuais (assets/logo.svg, …); sem eles usa os embutidos (placeholder, marca)
 	mux.Handle("GET /assets/", http.StripPrefix("/assets/", noCache(assetsHandler(cfg.AssetsDir, assets.Files))))
 	mux.Handle("GET /hub", proxy)
@@ -222,12 +228,11 @@ func checkPortOwnership(addr string) {
 	}
 }
 
-// newFlagProxy serve as bandeiras SVG que o próprio Arena já hospeda
-// (/build/images/flags/custom/{código}.svg), com cache em memória — funciona offline no ginásio.
-//
-// Bandeiras em localDir (ex.: estados brasileiros, mesmos SVGs do UWW Timing) têm
-// prioridade e não ficam em cache, para poderem ser trocadas com o serviço rodando.
-func newFlagProxy(arenaURL, localDir string) http.Handler {
+// newFlagProxy serve /flags/{código}.svg sem depender do Arena, nesta ordem:
+//  1. localDir: sem cache, para trocar com o serviço rodando;
+//  2. embutidas no executável (estados brasileiros e países);
+//  3. o Arena (/build/images/flags/custom/), com cache em memória, só para código novo.
+func newFlagProxy(arenaURL, localDir string, embedded fs.FS) http.Handler {
 	var mu sync.Mutex
 	cache := map[string][]byte{}
 	valid := regexp.MustCompile(`^[a-z0-9][a-z0-9_-]{1,23}\.svg$`)
@@ -244,6 +249,12 @@ func newFlagProxy(arenaURL, localDir string) http.Handler {
 		if b, err := os.ReadFile(filepath.Join(localDir, code)); err == nil {
 			w.Header().Set("Content-Type", "image/svg+xml")
 			w.Header().Set("Cache-Control", "no-cache")
+			w.Write(b)
+			return
+		}
+		if b, err := fs.ReadFile(embedded, "flags/"+code); err == nil {
+			w.Header().Set("Content-Type", "image/svg+xml")
+			w.Header().Set("Cache-Control", "public, max-age=86400")
 			w.Write(b)
 			return
 		}

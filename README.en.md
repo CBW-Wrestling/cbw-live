@@ -29,7 +29,8 @@ Live broadcast graphics for the **CBW (Brazilian Wrestling Confederation)**, int
 - **Direct connection to UWW Timing** (port 9696, the same as the "UWW TV Scoreboard" screen): everything the table does becomes graphics automatically, including the fight introduction, clock pause, every challenge stage (requested, under review, won, lost, canceled), blood time, passivity and the victory with the official type.
 - **Nothing to install on the broadcast and operator machines:** cbw-live runs on the server; OBS, vMix and browsers just open a link.
 - **Control page** so the operator can correct or force any graphic (fallback if Timing goes down).
-- **National and international events:** flags for the 27 Brazilian states (the same as UWW Timing) and for countries (served by Arena itself).
+- **National and international events:** flags for the 27 Brazilian states (the same as UWW Timing) and for countries, embedded in the executable (no Arena needed).
+- **Fixed URL per mat:** `/overlay.html?mat=A` follows the mat even when the event changes during the day.
 - **Transparent background or chroma key** (green/blue).
 - **Light and fast:** a single Go executable (~10 MB, no runtime), republishes each update in ~3 ms and distributes through the Mercure that already runs in Arena.
 
@@ -173,7 +174,7 @@ New events and mats created in Arena show up automatically: on each webhook or, 
 | Screen | URL | Purpose |
 |---|---|---|
 | **Mat list** | `/` | All events and mats, live scoreboard status, overlay and control links |
-| **Overlay** | `/overlay.html?event=<id>&mat=<mat>` | The broadcast graphic (1920×1080). This is the OBS/vMix source |
+| **Overlay** | `/overlay.html?mat=<mat>` | The broadcast graphic (1920×1080). This is the OBS/vMix source |
 | **Operator control** | `/control.html?event=<id>&mat=<mat>` | Buttons for the manual graphics + live overlay preview |
 | **Settings** | `/settings.html` | Global preferences (apply to all mats) |
 | **State gallery** | `/preview.html` | Every overlay state with fake data, to review the look without Arena or Timing |
@@ -243,12 +244,12 @@ Each style has a real preview (the overlay itself, with fake data) on the settin
 
 ### Logo and flags
 - **Organization logo:** `assets/logo.svg`, shown in the scoreboard header. Without the file, cbw-live uses the placeholder `assets/logo.placeholder.svg` (the CBW logo, embedded in the executable; it is a trademark not covered by the license, see [NOTICE](NOTICE)). To use yours, put the file at `assets/logo.svg` and reload the overlay.
-- **State flags:** `assets/flags/<code>.svg` (`pb.svg`, `sp.svg`…). The file name is the team code in Arena (`teamAlternateName`). These flags take priority over country flags, which come from Arena itself (`/build/images/flags/custom/`). All appear in a circle.
+- **Flags:** `assets/flags/<code>.svg` (`pb.svg`, `sp.svg`…). The file name is the team code in Arena (`teamAlternateName`). State and country flags are embedded in the executable and do not depend on Arena; a file in `assets/flags/` takes priority, and Arena is only queried for a code that is not embedded. All appear in a circle.
 - Files in `assets/` can be replaced while the service is running. Just reload the overlay.
 
 ## Using it in OBS
 1. **Sources → + → Browser**.
-2. **URL:** `http://<ip>:8095/overlay.html?event=<id>&mat=<mat>` (copy it from the mat list).
+2. **URL:** `http://<ip>:8095/overlay.html?mat=<mat>` (copy it from the mat list). The URL is fixed per mat: when the event on that mat changes, the overlay follows it (connected Timing, otherwise the latest live message). To pin one event, add `&event=<id>`.
 3. **Width 1920**, **Height 1080**.
 4. Leave "Shutdown source when not visible" and "Refresh browser when scene becomes active" unchecked. That way the overlay stays connected and animations do not restart.
 5. **Custom CSS:** delete OBS's default CSS (or leave `body { background-color: rgba(0,0,0,0); }`).
@@ -316,7 +317,7 @@ The control page buttons can always correct or force any graphic.
 | Symptom | Likely cause / fix |
 |---|---|
 | Log `OUTRO PROGRAMA responde nesta porta via IPv4` (another program answers on this port) | Another app uses the port (it has happened with REAPER on 8090). Change `LISTEN_ADDR` |
-| Empty overlay | No fight open on the mat, or wrong `event`/`mat` in the URL. Check the mat list |
+| Empty overlay | No fight open on the mat, or wrong `mat` (or `event`, if used) in the URL. Check the mat list |
 | Webhooks do not arrive | Check the webhook in Settings → Webhooks (Enabled) and the `host.docker.internal:8095` URL. Received ones are in `data/webhooks.jsonl` |
 | `invalid_client` / `invalid_grant` in the log | Wrong App ID/Secret or API Key, or the app does not use the `.../grants/api_key` grant |
 | Scoreboard ~1 s behind | Normal: Timing publishes once per second, on the second change. cbw-live adds ~3 ms |
@@ -366,12 +367,12 @@ scripts/            setup-env.sh; windows/investigar-timing.ps1
 | Method | Route | Description |
 |---|---|---|
 | GET | `/api/state` | State of all mats |
-| GET | `/api/state/{event}/{mat}` | State of one mat |
+| GET | `/api/state/{event}/{mat}` | State of one mat (`area` as the event = whatever is active on the mat; also works on `/api/control`) |
 | POST | `/api/control/{event}/{mat}` | Triggers a graphic: `{"graphic":"challenge","visible":true,"side":"home","status":"won"}` |
 | GET/PUT | `/api/settings` | Global settings |
 | POST | `/webhook/arena` | Arena webhooks |
 | GET | `/hub?topic=cbw/...` | SSE subscription (Mercure proxy) |
-| GET | `/flags/{code}.svg` | Flag (local states or Arena countries) |
+| GET | `/flags/{code}.svg` | Flag (`assets/flags`, else the embedded one, else Arena) |
 | GET | `/healthz` | Service health |
 
 `graphic`: `intro`, `challenge` (`status`: requested, challenge, won, lost, canceled), `injury` (`kind`: blood, injury), `passivity`, `victory` (`victoryType`), `layout` (`status`: expanded, collapsed) or `all` (hide only). `side`: `home` (red) or `away` (blue).

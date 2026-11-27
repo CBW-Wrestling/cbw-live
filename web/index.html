@@ -103,7 +103,7 @@ const GRAPHIC_LABEL = { intro: 'Apresentação', challenge: 'Challenge', injury:
 function matCard(m) {
   const v = matView(m);
   const qs = `event=${encodeURIComponent(m.eventId)}&mat=${encodeURIComponent(m.matName)}`;
-  const overlay = `/overlay.html?${qs}`;
+  const overlay = `/overlay.html?mat=${encodeURIComponent(m.matName)}`; // fixo por área
   const source = v.timing
     ? `<span class="badge ok live" title="UWW Timing conectado direto"><span class="dot"></span>Timing ${esc(v.timing.replace(/:9696$/, ''))}</span>`
     : v.liveRecent
